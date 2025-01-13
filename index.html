@@ -3,38 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Investor</title>
-    <link rel="stylesheet" href="style.css"> 
+    <meta name="description" content="Stock investment calculator and portfolio tracker">
+    <meta name="keywords" content="stocks, investing, calculator, finance, portfolio">
+    <title>Stock Investment Calculator | Track Your Portfolio</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
 
 <header>
-    <h1><i class="fas fa-coins"></i> What Stocks to Invest in?</h1>
-    <p>Your personal finance and investment tracker</p>
+    <h1><i class="fas fa-coins"></i> Smart Stock Investment Calculator</h1>
+    <p>Make data-driven investment decisions with our advanced portfolio tools</p>
 </header>
 
 <div class="container">
-
-    <!-- New Investment Calculator Card -->
+    <!-- Investment Calculator Card -->
     <div class="card" onclick="openCalculator()">
         <i class="fas fa-calculator icon"></i>
         <h2>Investment Calculator</h2>
-        <p>Click to estimate your returns over time</p>
+        <p>Calculate potential returns based on historical data</p>
+    </div>
+
+    <!-- Portfolio Tracker Card -->
+    <div class="card" onclick="openPortfolio()">
+        <i class="fas fa-chart-line icon"></i>
+        <h2>Portfolio Tracker</h2>
+        <p>Monitor and analyze your investments in real-time</p>
+    </div>
+
+    <!-- Market Analysis Card -->
+    <div class="card" onclick="openMarketAnalysis()">
+        <i class="fas fa-analytics icon"></i>
+        <h2>Market Analysis</h2>
+        <p>Get insights into market trends and opportunities</p>
     </div>
 </div>
 
 <footer>
-    <p>&copy; 2024 Stock Investor. All Rights Reserved.</p>
+    <p>&copy; 2024 Stock Investment Calculator. All Rights Reserved.</p>
+    <div class="footer-links">
+        <a href="/privacy">Privacy Policy</a> |
+        <a href="/terms">Terms of Service</a> |
+        <a href="/contact">Contact Us</a>
+    </div>
 </footer>
 
 <script>
-    // Function to open the calculator page in a new window and save the selected stock
+    /**
+     * Opens the calculator window for a specific stock
+     * @param {string} stock - The stock symbol to calculate returns for
+     * @returns {Window} The newly opened calculator window
+     */
     function openCalculator(stock = "NASDAQ_100") {
-        localStorage.setItem("selectedStock", stock); // Save selected stock to localStorage
-        window.open("calculator.html", "_blank", "width=600,height=700");
+        localStorage.setItem("selectedStock", stock);
+        return window.open("calculator.html", "_blank", "width=800,height=800");
     }
+
+    /**
+     * Opens the portfolio tracking interface
+     * @returns {Window} The portfolio tracking window
+     */
+    function openPortfolio() {
+        return window.open("portfolio.html", "_blank", "width=1200,height=800");
+    }
+
+    /**
+     * Opens the market analysis dashboard
+     * @returns {Window} The market analysis window
+     */
+    function openMarketAnalysis() {
+        return window.open("analysis.html", "_blank", "width=1200,height=800");
+    }
+
+    // Add event listeners for keyboard navigation
+    document.addEventListener('DOMContentLoaded', () => {
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            card.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.target.click();
+                }
+            });
+            card.setAttribute('tabindex', '0');
+        });
+    });
 </script>
 
 </body>
