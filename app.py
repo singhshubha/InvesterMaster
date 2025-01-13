@@ -4,15 +4,28 @@ import pandas as pd
 
 app = Flask(__name__)
 
-# Load stock data (Assuming data is preloaded into stocks.db)
 def get_annual_return(stock):
-    # Connect to the SQLite database
-    conn = sqlite3.connect('data/stocks.db')
+    # Connect to SQLite database
+    conn = sqlite3.connect('stocks.db')
     cursor = conn.cursor()
-    # Retrieve the average annual return for the selected stock
-    cursor.execute("SELECT AVG(return_percentage) FROM stock_returns WHERE stock = ?", (stock,))
-    annual_return = cursor.fetchone()[0]
+    
+    # Get all historical returns for the stock
+    cursor.execute("""
+        SELECT return_percentage 
+        FROM stock_returns 
+        WHERE stock = ?
+        ORDER BY date DESC
+    """, (stock,))
+    
+    returns = cursor.fetchall()
     conn.close()
+    
+    if not returns:
+        return None
+        
+    # Calculate average annual return
+    returns = [r[0] for r in returns]
+    annual_return = sum(returns) / len(returns)
     return annual_return
 
 @app.route('/')
@@ -31,19 +44,25 @@ def get_annual_return_api():
     
     annual_return = get_annual_return(stock)
     
-    if annual_return:
-        # Calculate compound returns over the years
-        total_return = amount * ((1 + annual_return/100) ** years)
-        profit = total_return - amount
+    if annual_return is not None:
+        # Calculate compound returns
+        total_value = amount
+        for _ in range(years):
+            total_value *= (1 + annual_return/100)
+            
+        profit = total_value - amount
         
         return jsonify({
             "initialInvestment": amount,
-            "totalValue": round(total_return, 2),
+            "totalValue": round(total_value, 2), 
             "profit": round(profit, 2),
-            "annualReturn": round(annual_return, 2)
+            "annualReturn": round(annual_return, 2),
+            "years": years
         })
     
-    return jsonify({"error": "Stock data not found"}), 404
+    return jsonify({
+        "error": f"No historical data found for stock {stock}"
+    }), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
