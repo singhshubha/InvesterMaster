@@ -3,8 +3,25 @@ CREATE TABLE IF NOT EXISTS stock_returns (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     stock TEXT NOT NULL,
     date DATE NOT NULL,
-    return_percentage REAL NOT NULL
+    return_percentage REAL NOT NULL,
+    open_price REAL,
+    close_price REAL,
+    high_price REAL,
+    low_price REAL,
+    volume INTEGER,
+    adjusted_close REAL,
+    rolling_avg_return REAL
 );
+
+-- Insert data from SPY.csv
+INSERT INTO stock_returns (stock, date, return_percentage, adjusted_close, rolling_avg_return)
+SELECT 
+    'SPY',
+    date,
+    return,
+    adjusted_close,
+    rolling_avg_return
+FROM '/Stock calculator/SPY.csv';
 
 -- User portfolios table
 CREATE TABLE IF NOT EXISTS portfolios (
@@ -33,7 +50,13 @@ CREATE TABLE IF NOT EXISTS market_analysis (
     price REAL NOT NULL,
     volume INTEGER,
     moving_avg_50 REAL,
-    moving_avg_200 REAL
+    moving_avg_200 REAL,
+    open_price REAL,
+    high_price REAL,
+    low_price REAL,
+    adjusted_close REAL,
+    dividend_amount REAL,
+    split_coefficient REAL
 );
 
 -- User accounts table
