@@ -4,29 +4,27 @@ import pandas as pd
 
 app = Flask(__name__)
 
-def get_annual_return(stock):
+def get_annual_return(stock, amount, years):
     # Connect to SQLite database
     conn = sqlite3.connect('stocks.db')
     cursor = conn.cursor()
     
-    # Get all historical returns for the stock
+    # Get historical returns for the stock
     cursor.execute("""
-        SELECT return_percentage 
+        SELECT AVG(return_percentage) 
         FROM stock_returns 
         WHERE stock = ?
-        ORDER BY date DESC
     """, (stock,))
     
-    returns = cursor.fetchall()
+    avg_return = cursor.fetchone()[0]
     conn.close()
     
-    if not returns:
+    if avg_return is None:
         return None
         
-    # Calculate average annual return
-    returns = [r[0] for r in returns]
-    annual_return = sum(returns) / len(returns)
-    return annual_return
+    # Calculate total return over the years
+    total_return = avg_return * years
+    return total_return
 
 @app.route('/')
 def index():
