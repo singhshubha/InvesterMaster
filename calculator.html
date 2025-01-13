@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Investment Calculator</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
     <style>
         /* Centering Container */
@@ -15,6 +16,7 @@
             align-items: center;
             background-color: #f4f6f9;
             margin: 0;
+            font-family: Arial, sans-serif;
         }
 
         /* Calculator Specific Styling */
@@ -22,9 +24,9 @@
             width: 100%;
             max-width: 400px;
             background-color: #ffffff;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
             text-align: center;
         }
 
@@ -72,20 +74,22 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .calculator-button:hover {
-            background-color: #0f0f1e;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
         }
 
         .result {
             margin-top: 20px;
             padding: 15px;
             font-size: 1.2em;
-            color: #16c79a;
-            border: 1px solid #16c79a;
+            color: #1a1a2e;
+            border: 1px solid #1a1a2e;
             border-radius: 5px;
+            line-height: 1.6;
         }
     </style>
 
@@ -93,8 +97,8 @@
 
 <body>
 
-<div class="container">
-    <h2>Investment Calculator</h2>
+<div class="calculator-container">
+    <h2><i class="fas fa-calculator"></i> Investment Calculator</h2>
     
     <form id="calculatorForm" onsubmit="event.preventDefault(); calculateReturns();">
         <table class="calculator-table">
@@ -117,12 +121,12 @@
                 <td><input type="number" id="years" placeholder="Enter years" required></td>
             </tr>
         </table>
-        <button type="button" class="calculator-button" onclick="calculateReturns()">Calculate</button>
+        <button type="button" class="calculator-button" onclick="calculateReturns()">Calculate Returns</button>
     </form>
 
     <div id="result" class="result" style="display: none;"></div>
 </div>
 
-<script src="{{ url_for('static', filename='script.js') }}"></script>
+<script src="script.js"></script>
 </body>
 </html>
