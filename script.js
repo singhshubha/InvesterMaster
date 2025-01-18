@@ -1,64 +1,63 @@
-
-
-// Event listeners for keyboard navigation and calculator form
-document.addEventListener('DOMContentLoaded', () => {
-    // Card navigation
-    const cards = document.querySelectorAll('.card');
-    cards.forEach(card => {
-        card.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.target.click();
-            }
-        });
-        card.setAttribute('tabindex', '0');
-    });
-
-    // Calculator form handling
-    const calculatorForm = document.getElementById("calculatorForm");
-    if (calculatorForm) {
-        calculatorForm.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                calculateReturns();
-            }
-        });
-    }
-});
-
 async function calculateReturns() {
     const stock = document.getElementById("stock").value;
     const amount = parseFloat(document.getElementById("amount").value);
     const years = parseInt(document.getElementById("years").value);
 
+    // Add validation
+    if (!stock || !amount || !years) {
+        alert("Please fill in all fields");
+        return;
+    }
+
+    const resultDiv = document.getElementById("result");
+    resultDiv.style.display = "block";
+    resultDiv.innerHTML = '<div class="loading">Calculating...</div>';
+
     try {
-        const response = await fetch('/calculate', {
+        console.log('Sending request with:', { stock, amount, years }); // Debug log
+        
+        const response = await fetch('http://localhost:5000/calculate', {
             method: 'POST',
-            headers: {
+            headers: { 
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
-            body: JSON.stringify({
-                stock: stock,
-                amount: amount,
-                years: years
-            })
+            body: JSON.stringify({ stock, amount, years })
         });
 
+        console.log('Response status:', response.status); // Debug log
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Response error:', errorText); // Debug log
+            throw new Error(`Server error: ${response.status} - ${errorText}`);
+        }
+
         const result = await response.json();
+        console.log('Received result:', result); // Debug log
         
-        // Display results
-        const resultDiv = document.getElementById("result");
+        if (result.error) {
+            throw new Error(result.error);
+        }
+
         resultDiv.innerHTML = `
-            <h3>Investment Summary</h3>
-            <p>Initial Investment: ${result.initial_investment}</p>
-            <p>Future Value: ${result.future_value}</p>
-            <p>Total Return: ${result.total_return}</p>
-            <p>Return Percentage: ${result.return_percentage}%</p>
-            <p>Risk-Adjusted Return: ${result.risk_adjusted_return}</p>
-            <p>Annual Return Rate: ${result.annual_return_rate}%</p>
+            <div class="result-box">
+                <h3>Investment Summary</h3>
+                <table class="result-table">
+                    <tr><td>Initial Investment:</td><td>${result.initial_investment}</td></tr>
+                    <tr><td>Investment Period:</td><td>${result.years} years</td></tr>
+                    <tr><td>Future Value:</td><td>${result.future_value}</td></tr>
+                    <tr><td>Total Return:</td><td>${result.total_return}</td></tr>
+                </table>
+            </div>
         `;
-        resultDiv.style.display = "block";
     } catch (error) {
-        console.error('Error:', error);
-        alert('Error calculating returns');
+        console.error('Full error:', error); // More detailed error logging
+        resultDiv.innerHTML = `
+            <div class="error-box">
+                <h3>Error</h3>
+                <p>${error.message}</p>
+            </div>
+        `;
     }
 }

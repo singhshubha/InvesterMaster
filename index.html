@@ -50,8 +50,8 @@
 </footer>
 
 <script>
-    function openCalculator(stock = 'SPY') {
-        window.location.href = 'calculator.html';
+    function openCalculator(stock) {
+        window.location.href = `calculator.html?stock=${stock}`;
     }
     
     function openPortfolio() {
@@ -59,7 +59,7 @@
     }
     
     function openMarketAnalysis() {
-        window.location.href = 'analysis.html';
+        window.location.href = 'market.html';
     }
 </script>
 
