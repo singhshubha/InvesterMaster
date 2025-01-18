@@ -19,7 +19,7 @@
 
 <div class="container">
     <!-- Investment Calculator Card -->
-    <div class="card" onclick="openCalculator()">
+    <div class="card" onclick="openCalculator('SPY')">
         <i class="fas fa-calculator icon"></i>
         <h2>Investment Calculator</h2>
         <p>Calculate potential returns based on historical data</p>
@@ -50,44 +50,17 @@
 </footer>
 
 <script>
-    /**
-     * Opens the calculator window for a specific stock
-     * @param {string} stock - The stock symbol to calculate returns for
-     * @returns {Window} The newly opened calculator window
-     */
-    function openCalculator(stock = "NASDAQ_100") {
-        localStorage.setItem("selectedStock", stock);
-        return window.open("calculator.html", "_blank", "width=800,height=800");
+    function openCalculator(stock = 'SPY') {
+        window.location.href = 'calculator.html';
     }
-
-    /**
-     * Opens the portfolio tracking interface
-     * @returns {Window} The portfolio tracking window
-     */
+    
     function openPortfolio() {
-        return window.open("portfolio.html", "_blank", "width=1200,height=800");
+        window.location.href = 'portfolio.html';
     }
-
-    /**
-     * Opens the market analysis dashboard
-     * @returns {Window} The market analysis window
-     */
+    
     function openMarketAnalysis() {
-        return window.open("analysis.html", "_blank", "width=1200,height=800");
+        window.location.href = 'analysis.html';
     }
-
-    // Add event listeners for keyboard navigation
-    document.addEventListener('DOMContentLoaded', () => {
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-            card.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.target.click();
-                }
-            });
-            card.setAttribute('tabindex', '0');
-        });
-    });
 </script>
 
 </body>

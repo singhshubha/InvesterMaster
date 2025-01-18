@@ -14,3 +14,9 @@ data['rolling_avg_return'] = data['return'].rolling(window=20*252).mean()
 
 # Save the processed data
 data.to_csv('/path/to/your/processed_sp_data.csv', index=False)
+
+
+# src/data_processing.py
+
+import pandas as pd
+

@@ -1,69 +1,116 @@
--- Stock returns table to track historical performance
-CREATE TABLE IF NOT EXISTS stock_returns (
+-- Drop existing tables
+DROP TABLE IF EXISTS nasdaq_100;
+DROP TABLE IF EXISTS qqq;
+DROP TABLE IF EXISTS sp500;
+DROP TABLE IF EXISTS spy;
+
+-- Create unified table structure
+CREATE TABLE nasdaq_100 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    stock TEXT NOT NULL,
     date DATE NOT NULL,
-    return_percentage REAL NOT NULL,
-    open_price REAL,
-    close_price REAL,
-    high_price REAL,
-    low_price REAL,
-    volume INTEGER,
-    adjusted_close REAL,
-    rolling_avg_return REAL
+    open REAL,
+    high REAL,
+    low REAL,
+    close REAL,
+    change_percent REAL,
+    UNIQUE(date)
 );
 
--- Insert data from SPY.csv
-INSERT INTO stock_returns (stock, date, return_percentage, adjusted_close, rolling_avg_return)
-SELECT 
-    'SPY',
-    date,
-    return,
-    adjusted_close,
-    rolling_avg_return
-FROM '/Stock calculator/SPY.csv';
-
--- User portfolios table
-CREATE TABLE IF NOT EXISTS portfolios (
+CREATE TABLE qqq (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Portfolio holdings table
-CREATE TABLE IF NOT EXISTS portfolio_holdings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    portfolio_id INTEGER NOT NULL,
-    stock TEXT NOT NULL,
-    shares REAL NOT NULL,
-    purchase_price REAL NOT NULL,
-    purchase_date DATE NOT NULL,
-    FOREIGN KEY (portfolio_id) REFERENCES portfolios(id)
-);
-
--- Market analysis table
-CREATE TABLE IF NOT EXISTS market_analysis (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    stock TEXT NOT NULL,
     date DATE NOT NULL,
-    price REAL NOT NULL,
-    volume INTEGER,
-    moving_avg_50 REAL,
-    moving_avg_200 REAL,
-    open_price REAL,
-    high_price REAL,
-    low_price REAL,
-    adjusted_close REAL,
-    dividend_amount REAL,
-    split_coefficient REAL
+    open REAL,
+    high REAL,
+    low REAL,
+    close REAL,
+    change_percent REAL,
+    UNIQUE(date)
 );
 
--- User accounts table
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE sp500 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    date DATE NOT NULL,
+    open REAL,
+    high REAL,
+    low REAL,
+    close REAL,
+    change_percent REAL,
+    UNIQUE(date)
 );
+
+CREATE TABLE spy (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date DATE NOT NULL,
+    open REAL,
+    high REAL,
+    low REAL,
+    close REAL,
+    change_percent REAL,
+    UNIQUE(date)
+);
+
+-- Enable CSV mode
+.mode csv
+.headers on
+
+-- Import NASDAQ_100
+CREATE TEMP TABLE temp_nasdaq (
+    date TEXT,
+    open REAL,
+    high REAL,
+    low REAL,
+    close REAL,
+    change_percent REAL
+);
+.import './files/NASDAQ_100.csv' temp_nasdaq
+INSERT INTO nasdaq_100 (date, open, high, low, close, change_percent)
+SELECT date, open, high, low, close, change_percent FROM temp_nasdaq;
+DROP TABLE temp_nasdaq;
+
+-- Import QQQ
+CREATE TEMP TABLE temp_qqq (
+    date TEXT,
+    open REAL,
+    high REAL,
+    low REAL,
+    close REAL,
+    change_percent REAL
+);
+.import './files/QQQ_raw.csv' temp_qqq
+INSERT INTO qqq (date, open, high, low, close, change_percent)
+SELECT date, open, high, low, close, change_percent FROM temp_qqq;
+DROP TABLE temp_qqq;
+
+-- Import SP500
+CREATE TEMP TABLE temp_sp500 (
+    date TEXT,
+    open REAL,
+    high REAL,
+    low REAL,
+    close REAL,
+    change_percent REAL
+);
+.import './files/SP500.csv' temp_sp500
+INSERT INTO sp500 (date, open, high, low, close, change_percent)
+SELECT date, open, high, low, close, change_percent FROM temp_sp500;
+DROP TABLE temp_sp500;
+
+-- Import SPY
+CREATE TEMP TABLE temp_spy (
+    date TEXT,
+    open REAL,
+    high REAL,
+    low REAL,
+    close REAL,
+    change_percent REAL
+);
+.import './files/SPY.csv' temp_spy
+INSERT INTO spy (date, open, high, low, close, change_percent)
+SELECT date, open, high, low, close, change_percent FROM temp_spy;
+DROP TABLE temp_spy;
+
+-- Create indexes
+CREATE INDEX idx_nasdaq_date ON nasdaq_100(date);
+CREATE INDEX idx_qqq_date ON qqq(date);
+CREATE INDEX idx_sp500_date ON sp500(date);
+CREATE INDEX idx_spy_date ON spy(date);
