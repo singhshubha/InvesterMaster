@@ -1,66 +1,64 @@
-// Execute calculateReturns when Enter key is pressed
-document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("calculatorForm").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            calculateReturns();
-        }
+
+
+// Event listeners for keyboard navigation and calculator form
+document.addEventListener('DOMContentLoaded', () => {
+    // Card navigation
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        card.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.target.click();
+            }
+        });
+        card.setAttribute('tabindex', '0');
     });
+
+    // Calculator form handling
+    const calculatorForm = document.getElementById("calculatorForm");
+    if (calculatorForm) {
+        calculatorForm.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                calculateReturns();
+            }
+        });
+    }
 });
 
 async function calculateReturns() {
+    const stock = document.getElementById("stock").value;
     const amount = parseFloat(document.getElementById("amount").value);
     const years = parseInt(document.getElementById("years").value);
 
-    if (!amount || !years) {
-        alert("Please enter valid amount and years.");
-        return;
-    }
-
     try {
-        // Fetch data from all three files
-        const responses = await Promise.all([
-            fetch(''),
-            fetch('/data/index2.json'), 
-            fetch('/data/index3.json')
-        ]);
-        
-        const data = await Promise.all(responses.map(r => r.json()));
-        
-        // Calculate average annual return across all indexes
-        let totalReturn = 0;
-        let validYears = 0;
-        
-        for (let year = 0; year < years; year++) {
-            let yearReturn = 0;
-            let validIndexes = 0;
-            
-            data.forEach(index => {
-                if (index.returns && index.returns[year] !== undefined) {
-                    yearReturn += index.returns[year];
-                    validIndexes++;
-                }
-            });
-            
-            if (validIndexes === 3) { // Only use years where all indexes have data
-                totalReturn += yearReturn / 3;
-                validYears++;
-            }
-        }
-        
-        const averageAnnualReturn = validYears > 0 ? totalReturn / validYears : 0;
-        const futureValue = amount * Math.pow(1 + averageAnnualReturn, years);
-        
-        // Show result in div and as a popup
-        document.getElementById("result").innerHTML = `
-            <p>Investment with an average annual return of ${(averageAnnualReturn * 100).toFixed(2)}%:</p>
-            <p>After ${years} years, $${amount.toLocaleString()} will grow to <strong>$${futureValue.toFixed(2).toLocaleString()}</strong>.</p>
-        `;
-        document.getElementById("result").style.display = "block";
+        const response = await fetch('/calculate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                stock: stock,
+                amount: amount,
+                years: years
+            })
+        });
 
-        alert(`Your investment of $${amount.toLocaleString()} will grow to $${futureValue.toFixed(2).toLocaleString()} after ${years} years.`);
+        const result = await response.json();
+        
+        // Display results
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = `
+            <h3>Investment Summary</h3>
+            <p>Initial Investment: ${result.initial_investment}</p>
+            <p>Future Value: ${result.future_value}</p>
+            <p>Total Return: ${result.total_return}</p>
+            <p>Return Percentage: ${result.return_percentage}%</p>
+            <p>Risk-Adjusted Return: ${result.risk_adjusted_return}</p>
+            <p>Annual Return Rate: ${result.annual_return_rate}%</p>
+        `;
+        resultDiv.style.display = "block";
     } catch (error) {
-        alert("Error calculating returns. Please try again.");
-        console.error(error);
+        console.error('Error:', error);
+        alert('Error calculating returns');
     }
 }
