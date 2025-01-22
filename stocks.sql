@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS nasdaq_100;
 DROP TABLE IF EXISTS qqq;
 DROP TABLE IF EXISTS sp500;
 DROP TABLE IF EXISTS spy;
+DROP TABLE IF EXISTS stocks;
 
 -- Create unified table structure
 CREATE TABLE nasdaq_100 (
@@ -49,6 +50,18 @@ CREATE TABLE spy (
     UNIQUE(date)
 );
 
+CREATE TABLE stocks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    symbol TEXT NOT NULL,
+    date DATE NOT NULL,
+    open REAL,
+    high REAL,
+    low REAL,
+    close REAL,
+    change_percent REAL,
+    UNIQUE(symbol, date)
+);
+
 -- Enable CSV mode
 .mode csv
 .headers on
@@ -76,9 +89,11 @@ CREATE TEMP TABLE temp_qqq (
     close REAL,
     change_percent REAL
 );
-.import './files/QQQ_raw.csv' temp_qqq
+.import '/Users/opalbronco/Downloads/InvesterMaster-main/files/QQQ_raw.csv' temp_qqq
 INSERT INTO qqq (date, open, high, low, close, change_percent)
 SELECT date, open, high, low, close, change_percent FROM temp_qqq;
+INSERT INTO stocks (symbol, date, open, high, low, close, change_percent)
+SELECT 'QQQ', date, open, high, low, close, change_percent FROM temp_qqq;
 DROP TABLE temp_qqq;
 
 -- Import SP500
@@ -114,3 +129,4 @@ CREATE INDEX idx_nasdaq_date ON nasdaq_100(date);
 CREATE INDEX idx_qqq_date ON qqq(date);
 CREATE INDEX idx_sp500_date ON sp500(date);
 CREATE INDEX idx_spy_date ON spy(date);
+CREATE INDEX idx_stocks_symbol_date ON stocks(symbol, date);
