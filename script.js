@@ -97,50 +97,59 @@ async function fetchNews() {
 }
 
 function displayNews(articles) {
-    const newsGrid = document.querySelector('.news-grid');
-    if (!newsGrid) return;
+    const newsContainer = document.getElementById('newsContainer');
+    if (!newsContainer) return;
 
-    newsGrid.innerHTML = articles
-        .slice(0, 3) // Show only 3 news items
-        .map(article => `
-            <div class="news-slide">
-                <div class="news-title">${article.title}</div>
-                <div class="news-content">${article.description || 'No description available'}</div>
-            </div>
-        `).join('');
+    // Store articles for rotation
+    window.newsArticles = articles;
+    window.currentArticleIndex = 0;
 
-    // Animate news items with stagger
-    const newsItems = document.querySelectorAll('.news-slide');
-    newsItems.forEach((item, index) => {
-        setTimeout(() => {
-            item.classList.add('active');
-        }, index * 150);
-    });
+    // Display first article
+    const firstArticle = articles[0];
+    newsContainer.innerHTML = `
+        <div class="news-slide active">
+            <div class="news-title">${firstArticle.title}</div>
+            <div class="news-content">${firstArticle.description || 'No description available'}</div>
+        </div>`;
 
-    // Start rotation after initial display
-    setTimeout(rotateNews, 5000);
+    // Start rotation
+    rotateNews();
 }
 
 function rotateNews() {
-    const slides = document.querySelectorAll('.news-slide');
-    if (slides.length < 2) return;
-
-    let currentSlide = 0;
-    slides[currentSlide].classList.add('active');
+    if (!window.newsArticles || window.newsArticles.length < 2) return;
 
     setInterval(() => {
-        // First, remove active class from current slide
-        slides[currentSlide].classList.remove('active');
+        const newsContainer = document.getElementById('newsContainer');
+        const currentSlide = newsContainer.querySelector('.news-slide');
         
-        // Wait for fade out transition (400ms)
+        // Fade out current slide
+        currentSlide.classList.remove('active');
+        
+        // Update index for next article
+        window.currentArticleIndex = (window.currentArticleIndex + 1) % window.newsArticles.length;
+        const nextArticle = window.newsArticles[window.currentArticleIndex];
+
+        // After fade out, update content
         setTimeout(() => {
-            // Update to next slide index
-            currentSlide = (currentSlide + 1) % slides.length;
-            // Add active class to new slide
-            slides[currentSlide].classList.add('active');
-        }, 500); // Wait for 0.5 seconds before showing the next slide
-        
-    }, 5000); // Total time between rotations
+            const newSlide = document.createElement('div');
+            newSlide.className = 'news-slide';
+            newSlide.innerHTML = `
+                <div class="news-title">${nextArticle.title}</div>
+                <div class="news-content">${nextArticle.description || 'No description available'}</div>
+            `;
+            
+            // Replace old slide with new one
+            newsContainer.innerHTML = '';
+            newsContainer.appendChild(newSlide);
+            
+            // Force reflow
+            void newSlide.offsetWidth;
+            
+            // Fade in new slide
+            newSlide.classList.add('active');
+        }, 500);
+    }, 5000);
 }
 
 // Initialize news feed on home page load
