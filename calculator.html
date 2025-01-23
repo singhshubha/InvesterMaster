@@ -116,31 +116,6 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* Back Button Style */
-        .back-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            padding: 10px 20px;
-            font-size: 1.1em;
-            background-color: #1a1a2e;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .back-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
-        }
-
-        .back-button i {
-            margin-right: 8px;
-        }
-
         /* Updated Select Styles */
         .calculator-table select {
             width: 100%;
@@ -229,6 +204,111 @@
             align-self: flex-end;
             margin-top: auto;
         }
+
+        /* Add new navigation styles */
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #1a1a2e;
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .nav-logo {
+            color: white;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        /* Adjust body padding to account for fixed navbar */
+        body {
+            padding-top: 70px;
+        }
+
+        /* Footer Styles */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #1a1a2e;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #ffd700;
+        }
+
+        .social-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 1.2em;
+            transition: color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: #ffd700;
+        }
+
+        /* Adjust body padding for fixed footer */
+        body {
+            padding-bottom: 80px;
+        }
     </style>
     <script src="script.js" defer></script>
     <script>
@@ -259,10 +339,20 @@
 </head>
 
 <body>
-    <!-- Add Back Button -->
-    <a href="index.html" class="back-button">
-        <i class="fas fa-arrow-left"></i>Back to Home
-    </a>
+    <!-- Replace back button with navigation bar -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <i class="fas fa-chart-line"></i> InvesterMaster
+            </a>
+            <div class="nav-links">
+                <a href="index.html"><i class="fas fa-home"></i> Home</a>
+                <a href="calculator.html" class="active"><i class="fas fa-calculator"></i> Calculator</a>
+                <a href="portfolio.html"><i class="fas fa-folder"></i> Portfolio</a>
+                <a href="market-analysis.html"><i class="fas fa-chart-bar"></i> Market Analysis</a>
+            </div>
+        </div>
+    </nav>
 
 <div class="calculator-container">
     <h2><i class="fas fa-calculator"></i> Investment Calculator</h2>
@@ -355,6 +445,24 @@
         </div>
     </div>
 
-
+    <footer class="footer">
+        <div style="text-align: flex;">
+            <p>&copy; 2025 Invester Master. All Rights Reserved.</p>
+        </div>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html">Terms of Service</a>
+            </div>
+            <div class="social-links">
+                <a href="https://x.com/ShubhaSingh14"><i class="fab fa-twitter"></i></a>
+                <a href="https://www.instagram.com/singhsshubha/"><i class="fab fa-instagram"></i></a>
+                <a href="https://www.linkedin.com/in/shubhassingh/"><i class="fab fa-linkedin"></i></a>
+                <a href="https://github.com/singhshubha"><i class="fab fa-github"></i></a>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
