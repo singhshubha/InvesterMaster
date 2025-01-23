@@ -123,7 +123,6 @@ CREATE TEMP TABLE temp_spy (
 INSERT INTO spy (date, open, high, low, close, change_percent)
 SELECT date, open, high, low, close, change_percent FROM temp_spy;
 DROP TABLE temp_spy;
-
 -- Create indexes
 CREATE INDEX idx_nasdaq_date ON nasdaq_100(date);
 CREATE INDEX idx_qqq_date ON qqq(date);
