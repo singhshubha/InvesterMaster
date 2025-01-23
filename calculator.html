@@ -91,25 +91,109 @@
             border-radius: 5px;
             line-height: 1.6;
         }
-    </style>
 
+        .result-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        
+        .result-table th, .result-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        
+        .result-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        
+        .result-content {
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Back Button Style */
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            background-color: #1a1a2e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+
+        .back-button i {
+            margin-right: 8px;
+        }
+
+        /* Updated Select Styles */
+        .calculator-table select {
+            width: 100%;
+            padding: 12px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            background-color: white;
+            cursor: pointer;
+            height: auto;
+            max-width: none;
+            text-overflow: ellipsis;
+            white-space: normal;
+        }
+
+        .calculator-table select option {
+            padding: 12px;
+            font-size: 1em;
+            white-space: normal;
+            min-height: 1.2em;
+            line-height: 1.2;
+        }
+
+        /* Ensure table cells can fit content */
+        .calculator-table td {
+            min-width: 200px;
+            max-width: none;
+            white-space: normal;
+        }
+    </style>
+    <script src="script.js" defer></script>
 </head>
 
 <body>
+    <!-- Add Back Button -->
+    <a href="index.html" class="back-button">
+        <i class="fas fa-arrow-left"></i>Back to Home
+    </a>
 
 <div class="calculator-container">
     <h2><i class="fas fa-calculator"></i> Investment Calculator</h2>
     
-    <form id="calculatorForm" onsubmit="event.preventDefault(); calculateReturns();">
+    <form id="calculatorForm">
         <table class="calculator-table">
             <tr>
                 <th>Select Stock</th>
                 <td>
                     <select id="stock">
-                        <option value="nasdaq_100">NASDAQ 100</option>
-                        <option value="qqq">QQQ ETF</option>
-                        <option value="sp500">S&P 500</option>
-                        <option value="spy">SPY</option>
+                        <option value="nasdaq_100">NASDAQ 100 Index</option>
+                        <option value="QQQ">Invesco QQQ Trust ETF</option>
+                        <option value="sp500">S&P 500 Index</option>
+                        <option value="SPY">SPY S&P 500 ETF</option>
                     </select>
                 </td>
             </tr>
@@ -125,9 +209,30 @@
         <button type="button" class="calculator-button" onclick="calculateReturns()">Calculate Returns</button>
     </form>
 
-    <div id="result" class="result" style="display: none;"></div>
+    <div id="result" class="result" style="display: none;">
+        <div class="result-content">
+            <h3>Investment Results</h3>
+            <table class="result-table">
+                <tr>
+                    <th>Initial Investment</th>
+                    <td id="initial-investment">-</td>
+                </tr>
+                <tr>
+                    <th>Investment Period</th>
+                    <td id="investment-period">-</td>
+                </tr>
+                <tr>
+                    <th>Future Value</th>
+                    <td id="future-value">-</td>
+                </tr>
+                <tr>
+                    <th>Total Return</th>
+                    <td id="total-return">-</td>
+                </tr>
+            </table>
+        </div>
+    </div>
 </div>
 
-<script src="script.js"></script>
 </body>
 </html>
