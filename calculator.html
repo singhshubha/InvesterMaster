@@ -171,8 +171,91 @@
             max-width: none;
             white-space: normal;
         }
+
+        /* Updated Quote Slider Styles */
+        .quotes-container {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 400px;
+            height: auto; /* Changed from fixed height */
+            min-height: 250px; /* Added minimum height */
+            background: rgba(26, 26, 46, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            color: white;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            backdrop-filter: blur(8px);
+            overflow: hidden; /* Added overflow control */
+        }
+
+        .quote-slide {
+            position: absolute;
+            width: calc(100% - 90px); /* Adjust for padding */
+            height: auto; /* Changed from fixed height */
+            min-height: 150px; /* Added minimum height */
+            top: 20%;
+            left: 30px;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            pointer-events: none; /* Prevent text selection */
+        }
+
+        .quote-slide.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .quote-text {
+            font-size: 1.1em;
+            font-style: italic;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            max-width: 100%; /* Ensure text doesn't overflow */
+            word-wrap: break-word; /* Handle long words */
+        }
+
+        .quote-author {
+            font-size: 0.9em;
+            color: #ffd700;
+            align-self: flex-end;
+            margin-top: auto;
+        }
     </style>
     <script src="script.js" defer></script>
+    <script>
+        function rotateQuotes() {
+            const slides = document.querySelectorAll('.quote-slide');
+            if (slides.length < 2) return;
+
+            let currentSlide = 0;
+            slides[currentSlide].classList.add('active');
+
+            setInterval(() => {
+                // First, remove active class from current slide
+                slides[currentSlide].classList.remove('active');
+                
+                // Wait for fade out transition (400ms)
+                setTimeout(() => {
+                    // Update to next slide index
+                    currentSlide = (currentSlide + 1) % slides.length;
+                    // Add active class to new slide
+                    slides[currentSlide].classList.add('active');
+                }, 400);
+                
+            }, 5400); // Total time between rotations (5000ms display + 400ms transition)
+        }
+
+        window.addEventListener('load', rotateQuotes);
+    </script>
 </head>
 
 <body>
@@ -211,28 +294,67 @@
 
     <div id="result" class="result" style="display: none;">
         <div class="result-content">
-            <h3>Investment Results</h3>
-            <table class="result-table">
-                <tr>
-                    <th>Initial Investment</th>
-                    <td id="initial-investment">-</td>
-                </tr>
-                <tr>
-                    <th>Investment Period</th>
-                    <td id="investment-period">-</td>
-                </tr>
-                <tr>
-                    <th>Future Value</th>
-                    <td id="future-value">-</td>
-                </tr>
-                <tr>
-                    <th>Total Return</th>
-                    <td id="total-return">-</td>
-                </tr>
-            </table>
+            <div class="result-content" style="display: flex; flex-direction: column; align-items: flex-start;">
+                <h3>Investment Results</h3>
+                <table class="result-table">
+                    <tr>
+                        <th>Initial Investment</th>
+                        <td id="initial-investment">-</td>
+                    </tr>
+                    <tr>
+                        <th>Investment Period</th>
+                        <td id="investment-period">-</td>
+                    </tr>
+                    <tr>
+                        <th>Future Value</th>
+                        <td id="future-value">-</td>
+                    </tr>
+                    <tr>
+                        <th>Total Return</th>
+                        <td id="total-return">-</td>
+                    </tr>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+    <!-- Add Quotes Container -->
+    <div class="quotes-container">
+        <div class="quote-slide">
+            <div class="quote-text">"An investment in knowledge pays the best interest."</div>
+            <div class="quote-author">— Benjamin Franklin</div>
+        </div>
+        <div class="quote-slide">
+            <div class="quote-text">"With a good perspective on history, we can have a better understanding of the past and present, and thus a clear vision of the future."</div>
+            <div class="quote-author">— Carlos Slim Helu</div>
+        </div>
+        <div class="quote-slide">
+            <div class="quote-text">"Given a 10% chance of a 100 times payoff, you should take that bet every time."</div>
+            <div class="quote-author">— Jeff Bezos</div>
+        </div>
+        <div class="quote-slide">
+            <div class="quote-text">"Don't look for the needle in the haystack. Just buy the haystack!"</div>
+            <div class="quote-author">— John Bogle</div>
+        </div>
+        <div class="quote-slide">
+            <div class="quote-text">"In investing, what is comfortable is rarely profitable."</div>
+            <div class="quote-author">— Robert Arnott</div>
+        </div>
+        <div class="quote-slide">
+            <div class="quote-text">"Compound interest is the eighth wonder of the world. He who understands it, earns it; he who doesn't, pays it."</div>
+            <div class="quote-author">— Albert Einstein</div>
+        </div>
+        <div class="quote-slide">
+            <div class="quote-text">"Know what you own, and know why you own it."</div>
+            <div class="quote-author">— Peter Lynch</div>
+        </div>
+        <div class="quote-slide">
+            <div class="quote-text">"Investing should be more like watching paint dry or watching grass grow. If you want excitement, take $800 and go to Las Vegas."</div>
+            <div class="quote-author">— Paul Samuelson</div>
+        </div>
+    </div>
+
 
 </body>
 </html>
