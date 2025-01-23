@@ -65,10 +65,14 @@ function showError(message) {
     resultDiv.style.display = "block";
 }
 
+// Update DOMContentLoaded event listener
 document.addEventListener('DOMContentLoaded', () => {
-    startQuoteSlideShow();
-    fetchNews();
-    startNewsSlideShow();
+    if (document.querySelector('.quote-slide')) {
+        startQuoteSlideShow();
+    }
+    if (document.getElementById('newsContainer')) {
+        fetchNews();
+    }
 });
 
 function startQuoteSlideShow() {
@@ -88,11 +92,19 @@ async function fetchNews() {
     try {
         const response = await fetch('https://newsapi.org/v2/everything?q=stocks+finance&apiKey=43b766e2a83f4ecaa59b82db1751d737&pageSize=10');
         const data = await response.json();
-        if (data.articles) {
+        if (data.articles && data.articles.length > 0) {
             displayNews(data.articles);
         }
     } catch (error) {
         console.error('Failed to fetch news:', error);
+        const newsContainer = document.getElementById('newsContainer');
+        if (newsContainer) {
+            newsContainer.innerHTML = `
+                <div class="news-slide active">
+                    <div class="news-title">Error loading news</div>
+                    <div class="news-content">Unable to fetch the latest updates.</div>
+                </div>`;
+        }
     }
 }
 
@@ -100,20 +112,31 @@ function displayNews(articles) {
     const newsContainer = document.getElementById('newsContainer');
     if (!newsContainer) return;
 
+    // Clear any existing content
+    newsContainer.innerHTML = '';
+    
+    // Create and display first article
+    const firstArticle = articles[0];
+    const newsSlide = document.createElement('div');
+    newsSlide.className = 'news-slide';
+    newsSlide.innerHTML = `
+        <div class="news-title">${firstArticle.title}</div>
+        <div class="news-content">${firstArticle.description || 'No description available'}</div>
+    `;
+    newsContainer.appendChild(newsSlide);
+    
+    // Force reflow before adding active class
+    void newsSlide.offsetWidth;
+    newsSlide.classList.add('active');
+
     // Store articles for rotation
     window.newsArticles = articles;
     window.currentArticleIndex = 0;
 
-    // Display first article
-    const firstArticle = articles[0];
-    newsContainer.innerHTML = `
-        <div class="news-slide active">
-            <div class="news-title">${firstArticle.title}</div>
-            <div class="news-content">${firstArticle.description || 'No description available'}</div>
-        </div>`;
-
     // Start rotation
-    rotateNews();
+    if (articles.length > 1) {
+        rotateNews();
+    }
 }
 
 function rotateNews() {
@@ -150,9 +173,4 @@ function rotateNews() {
             newSlide.classList.add('active');
         }, 500);
     }, 5000);
-}
-
-// Initialize news feed on home page load
-if (window.location.pathname.includes('index.html')) {
-    fetchNews();
 }
