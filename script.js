@@ -1,3 +1,5 @@
+const API_KEY = 'xsPF8aXsUpC0Ri1ALx4zgpZBDgw6G9y2';
+
 async function calculateReturns() {
     try {
         const stock = document.getElementById("stock").value;
@@ -13,12 +15,12 @@ async function calculateReturns() {
         resultDiv.innerHTML = '<div class="loading">Calculating...</div>';
         resultDiv.style.display = "block";
 
-        // Use port 5001 instead of 5000
         const response = await fetch('http://localhost:5001/calculate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${API_KEY}`
             },
             mode: 'cors',
             body: JSON.stringify({
@@ -65,7 +67,6 @@ function showError(message) {
     resultDiv.style.display = "block";
 }
 
-// Update DOMContentLoaded event listener
 document.addEventListener('DOMContentLoaded', () => {
     if (document.querySelector('.quote-slide')) {
         startQuoteSlideShow();
@@ -84,10 +85,9 @@ function startQuoteSlideShow() {
         slides[currentSlide].classList.remove('active');
         currentSlide = (currentSlide + 1) % slides.length;
         slides[currentSlide].classList.add('active');
-    }, 5000); // Change slide every 5 seconds
+    }, 5000);
 }
 
-// Add news-related functions
 async function fetchNews() {
     try {
         const response = await fetch('https://newsapi.org/v2/everything?q=stocks+finance&apiKey=43b766e2a83f4ecaa59b82db1751d737&pageSize=10');
@@ -112,10 +112,8 @@ function displayNews(articles) {
     const newsContainer = document.getElementById('newsContainer');
     if (!newsContainer) return;
 
-    // Clear any existing content
     newsContainer.innerHTML = '';
-    
-    // Create and display first article
+
     const firstArticle = articles[0];
     const newsSlide = document.createElement('div');
     newsSlide.className = 'news-slide';
@@ -124,16 +122,13 @@ function displayNews(articles) {
         <div class="news-content">${firstArticle.description || 'No description available'}</div>
     `;
     newsContainer.appendChild(newsSlide);
-    
-    // Force reflow before adding active class
+
     void newsSlide.offsetWidth;
     newsSlide.classList.add('active');
 
-    // Store articles for rotation
     window.newsArticles = articles;
     window.currentArticleIndex = 0;
 
-    // Start rotation
     if (articles.length > 1) {
         rotateNews();
     }
@@ -145,15 +140,12 @@ function rotateNews() {
     setInterval(() => {
         const newsContainer = document.getElementById('newsContainer');
         const currentSlide = newsContainer.querySelector('.news-slide');
-        
-        // Fade out current slide
+
         currentSlide.classList.remove('active');
-        
-        // Update index for next article
+
         window.currentArticleIndex = (window.currentArticleIndex + 1) % window.newsArticles.length;
         const nextArticle = window.newsArticles[window.currentArticleIndex];
 
-        // After fade out, update content
         setTimeout(() => {
             const newSlide = document.createElement('div');
             newSlide.className = 'news-slide';
@@ -161,15 +153,12 @@ function rotateNews() {
                 <div class="news-title">${nextArticle.title}</div>
                 <div class="news-content">${nextArticle.description || 'No description available'}</div>
             `;
-            
-            // Replace old slide with new one
+
             newsContainer.innerHTML = '';
             newsContainer.appendChild(newSlide);
-            
-            // Force reflow
+
             void newSlide.offsetWidth;
-            
-            // Fade in new slide
+
             newSlide.classList.add('active');
         }, 500);
     }, 5000);
