@@ -1,4 +1,23 @@
-const API_KEY = 'xsPF8aXsUpC0Ri1ALx4zgpZBDgw6G9y2';
+// Example: Fetch stock data using an API key
+
+const STOCK_API_KEY = 'd0ip4c1r01qusbepvh6gd0ip4c1r01qusbepvh70'; // Your Alpha Vantage API key
+const symbol = 'AAPL'; // Example stock symbol
+
+async function fetchStockData(symbol) {
+    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${STOCK_API_KEY}`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        console.log(data);
+        // Process your data here
+    } catch (error) {
+        console.error('Error fetching stock data:', error);
+    }
+}
+
+fetchStockData(symbol);
+
 
 async function calculateReturns() {
     try {
@@ -6,43 +25,35 @@ async function calculateReturns() {
         const amount = parseFloat(document.getElementById("amount").value);
         const years = parseFloat(document.getElementById("years").value);
 
-        // Validation
         if (!stock || isNaN(amount) || isNaN(years) || amount <= 0 || years <= 0) {
-            throw new Error("Please enter valid values");
+            showError("Please enter valid values");
+            return;
         }
 
         const resultDiv = document.getElementById("result");
         resultDiv.innerHTML = '<div class="loading">Calculating...</div>';
         resultDiv.style.display = "block";
 
-        const response = await fetch('http://localhost:5001/calculate', {
+        const response = await fetch('/api/calculate', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${API_KEY}`
-            },
-            mode: 'cors',
-            body: JSON.stringify({
-                stock: stock,
-                amount: amount,
-                years: years
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stock, amount, years })
         });
-
+        const text = await response.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            showError("Server returned invalid response.");
+            return;
+        }
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            showError(data.error || "Calculation failed.");
+            return;
         }
-
-        const result = await response.json();
-        if (result.error) {
-            throw new Error(result.error);
-        }
-
-        displayResults(result);
+        displayResults(data);
     } catch (error) {
-        console.error('Calculation error:', error);
-        showError(`Calculation failed: ${error.message}`);
+        showError("Calculation failed: " + error.message);
     }
 }
 
@@ -52,10 +63,10 @@ function displayResults(result) {
         <div class="result-content">
             <h3>Investment Results</h3>
             <table class="result-table">
-                <tr><td>Initial Investment:</td><td>${result.initial_investment}</td></tr>
+                <tr><td>Initial Investment:</td><td>$${result.initial_investment}</td></tr>
                 <tr><td>Investment Period:</td><td>${result.years} years</td></tr>
-                <tr><td>Future Value:</td><td>${result.future_value}</td></tr>
-                <tr><td>Total Return:</td><td>${result.total_return}</td></tr>
+                <tr><td>Future Value:</td><td>$${result.future_value}</td></tr>
+                <tr><td>Total Return:</td><td>$${result.total_return}</td></tr>
             </table>
         </div>`;
     resultDiv.style.display = "block";
@@ -163,3 +174,4 @@ function rotateNews() {
         }, 500);
     }, 5000);
 }
+

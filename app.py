@@ -1,16 +1,15 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for
 from flask_cors import CORS
 import requests
+import yfinance as yf
 from calculator_logic import InvestmentCalculator
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 # Simplest CORS configuration
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-API_KEY = 'your_api_key'
-API_URL = 'https://api.example.com/stock_data'
-
-calculator = InvestmentCalculator('stocks.db')
+API_KEY = 'PBM5CSUG6F9IB'
+API_URL = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${API_KEY}'
 
 @app.route('/')
 def home():
@@ -21,35 +20,20 @@ def calculator_page():
     stock = request.args.get('stock', 'SPY')  # Default to SPY if no stock is selected
     return render_template('calculator.html', stock=stock)
 
-@app.route('/calculate', methods=['POST'])
+@app.route('/api/calculate', methods=['POST'])
 def calculate():
     try:
         data = request.json
-        stock = data['stock']
-        amount = float(data['amount'])
-        years = int(data['years'])
+        symbol = data.get('stock')
+        amount = float(data.get('amount'))
+        years = float(data.get('years'))
 
-        # Fetch stock data from API
-        response = requests.get(f'{API_URL}?symbol={stock}&apikey={API_KEY}')
-        response.raise_for_status()
-        stock_data = response.json()
-
-        # Perform calculations
-        avg_daily_return = sum(item['change_percent'] for item in stock_data) / len(stock_data)
-        annual_return = avg_daily_return * 252  # Trading days per year
-        future_value = amount * ((1 + (annual_return / 100)) ** years)
-        total_return = future_value - amount
-
-        result = {
-            'initial_investment': amount,
-            'years': years,
-            'future_value': future_value,
-            'total_return': total_return
-        }
-
+        result = InvestmentCalculator.calculate_returns(symbol, amount, years)
+        if result is None:
+            return jsonify({'error': 'No data available for this stock.'}), 400
         return jsonify(result)
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     # Use port 5001 instead of 5000 to avoid AirPlay conflict
