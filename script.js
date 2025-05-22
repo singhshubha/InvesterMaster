@@ -30,28 +30,20 @@ async function calculateReturns() {
             return;
         }
 
-        const resultDiv = document.getElementById("result");
-        resultDiv.innerHTML = '<div class="loading">Calculating...</div>';
-        resultDiv.style.display = "block";
+        // For demo: Assume a fixed annual return rate (e.g., 7%)
+        const annualReturnRate = 0.07;
+        const futureValue = amount * Math.pow(1 + annualReturnRate, years);
+        const totalReturn = futureValue - amount;
 
-        const response = await fetch('/api/calculate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ stock, amount, years })
-        });
-        const text = await response.text();
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (e) {
-            showError("Server returned invalid response.");
-            return;
-        }
-        if (!response.ok) {
-            showError(data.error || "Calculation failed.");
-            return;
-        }
-        displayResults(data);
+        const result = {
+            initial_investment: amount.toFixed(2),
+            years: years,
+            annual_return_rate: (annualReturnRate * 100).toFixed(2) + '%',
+            future_value: futureValue.toFixed(2),
+            total_return: totalReturn.toFixed(2)
+        };
+
+        displayResults(result);
     } catch (error) {
         showError("Calculation failed: " + error.message);
     }
@@ -65,6 +57,7 @@ function displayResults(result) {
             <table class="result-table">
                 <tr><td>Initial Investment:</td><td>$${result.initial_investment}</td></tr>
                 <tr><td>Investment Period:</td><td>${result.years} years</td></tr>
+                <tr><td>Annual Return Rate:</td><td>${result.annual_return_rate}</td></tr>
                 <tr><td>Future Value:</td><td>$${result.future_value}</td></tr>
                 <tr><td>Total Return:</td><td>$${result.total_return}</td></tr>
             </table>
@@ -142,8 +135,6 @@ function displayNews(articles) {
 
     if (articles.length > 1) {
         rotateNews();
-    }
-}
 
 function rotateNews() {
     if (!window.newsArticles || window.newsArticles.length < 2) return;
