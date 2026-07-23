@@ -55,11 +55,11 @@ function displayResults(result) {
         <div class="result-content">
             <h3>Investment Results</h3>
             <table class="result-table">
-                <tr><td>Initial Investment:</td><td>$${result.initial_investment}</td></tr>
-                <tr><td>Investment Period:</td><td>${result.years} years</td></tr>
-                <tr><td>Annual Return Rate:</td><td>${result.annual_return_rate}</td></tr>
-                <tr><td>Future Value:</td><td>$${result.future_value}</td></tr>
-                <tr><td>Total Return:</td><td>$${result.total_return}</td></tr>
+                <tr><th>Initial Investment</th><td>$${result.initial_investment}</td></tr>
+                <tr><th>Investment Period</th><td>${result.years} years</td></tr>
+                <tr><th>Annual Return Rate</th><td>${result.annual_return_rate}</td></tr>
+                <tr><th>Future Value</th><td>$${result.future_value}</td></tr>
+                <tr><th>Total Return</th><td>$${result.total_return}</td></tr>
             </table>
         </div>`;
     resultDiv.style.display = "block";
@@ -78,7 +78,48 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('newsContainer')) {
         fetchNews();
     }
+    setupNavToggle();
+    setupScrollReveal();
 });
+
+function setupNavToggle() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    if (!toggle || !links) return;
+
+    toggle.addEventListener('click', () => {
+        toggle.classList.toggle('open');
+        links.classList.toggle('open');
+    });
+
+    links.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            toggle.classList.remove('open');
+            links.classList.remove('open');
+        });
+    });
+}
+
+function setupScrollReveal() {
+    const cards = document.querySelectorAll('.card');
+    if (!cards.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+        cards.forEach(card => card.classList.add('in-view'));
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => entry.target.classList.add('in-view'), index * 100);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.2 });
+
+    cards.forEach(card => observer.observe(card));
+}
 
 function startQuoteSlideShow() {
     let currentSlide = 0;
@@ -135,6 +176,8 @@ function displayNews(articles) {
 
     if (articles.length > 1) {
         rotateNews();
+    }
+}
 
 function rotateNews() {
     if (!window.newsArticles || window.newsArticles.length < 2) return;
@@ -165,4 +208,3 @@ function rotateNews() {
         }, 500);
     }, 5000);
 }
-

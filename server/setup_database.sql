@@ -12,22 +12,22 @@ CREATE TABLE stocks (
 .headers on
 
 -- Import SPY data
-.import '/Users/opalbronco/Downloads/InvesterMaster-main/files/SPY.csv' temp_spy
+.import '../data/SPY.csv' temp_spy
 INSERT INTO stocks (symbol, date, close, change_percent)
 SELECT 'SPY', date, close, change_percent FROM temp_spy;
 
 -- Import QQQ data
-.import '/Users/opalbronco/Downloads/InvesterMaster-main/files/QQQ_raw.csv' temp_qqq
+.import '../data/QQQ_raw.csv' temp_qqq
 INSERT INTO stocks (symbol, date, close, change_percent)
 SELECT 'QQQ', date, close, change_percent FROM temp_qqq;
 
 -- Import NASDAQ 100 data
-.import '/Users/opalbronco/Downloads/InvesterMaster-main/files/NASDAQ_100.csv' temp_nasdaq
+.import '../data/NASDAQ_100.csv' temp_nasdaq
 INSERT INTO stocks (symbol, date, close, change_percent)
 SELECT 'nasdaq_100', date, close, change_percent FROM temp_nasdaq;
 
 -- Import SP500 data
-.import '/Users/opalbronco/Downloads/InvesterMaster-main/files/SP500.csv' temp_sp500
+.import '../data/SP500.csv' temp_sp500
 INSERT INTO stocks (symbol, date, close, change_percent)
 SELECT 'sp500', date, close, change_percent FROM temp_sp500;
 

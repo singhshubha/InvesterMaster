@@ -46,12 +46,20 @@ InvestorMaster is a stock market analysis and calculation tool that helps invest
     
     Start the backend server:
     
-    - python app.py
+    - python server/app.py
     
     Launch the frontend:
-    - Open index.html in a browser or serve it using a local development server.
+    - Open index.html in a browser or serve it using a local development server (e.g. `python -m http.server`).
 
-5. Usage
+5. Project Structure
+
+    - index.html, calculator.html — page shells; all markup is rendered by JS at load time
+    - css/ — stylesheet (royal blue & white theme)
+    - js/ — components.js (navbar/footer), shared.js (utilities), home.js, calculator.js (per-page rendering)
+    - server/ — Flask/Express backend, calculators, DB scripts
+    - data/ — stocks.db and historical CSV datasets
+
+6. Usage
 
   - Enter a stock symbol to retrieve historical data.
   
@@ -61,6 +69,6 @@ InvestorMaster is a stock market analysis and calculation tool that helps invest
   
   - Store and query data from the database.
 
-6. Contributing
+7. Contributing
 
   Pull requests are welcome! For major changes, please open an issue first to discuss the proposed update.

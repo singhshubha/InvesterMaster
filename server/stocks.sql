@@ -75,7 +75,7 @@ CREATE TEMP TABLE temp_nasdaq (
     close REAL,
     change_percent REAL
 );
-.import './files/NASDAQ_100.csv' temp_nasdaq
+.import '../data/NASDAQ_100.csv' temp_nasdaq
 INSERT INTO nasdaq_100 (date, open, high, low, close, change_percent)
 SELECT date, open, high, low, close, change_percent FROM temp_nasdaq;
 DROP TABLE temp_nasdaq;
@@ -89,7 +89,7 @@ CREATE TEMP TABLE temp_qqq (
     close REAL,
     change_percent REAL
 );
-.import '/Users/opalbronco/Downloads/InvesterMaster-main/files/QQQ_raw.csv' temp_qqq
+.import '../data/QQQ_raw.csv' temp_qqq
 INSERT INTO qqq (date, open, high, low, close, change_percent)
 SELECT date, open, high, low, close, change_percent FROM temp_qqq;
 INSERT INTO stocks (symbol, date, open, high, low, close, change_percent)
@@ -105,7 +105,7 @@ CREATE TEMP TABLE temp_sp500 (
     close REAL,
     change_percent REAL
 );
-.import './files/SP500.csv' temp_sp500
+.import '../data/SP500.csv' temp_sp500
 INSERT INTO sp500 (date, open, high, low, close, change_percent)
 SELECT date, open, high, low, close, change_percent FROM temp_sp500;
 DROP TABLE temp_sp500;
@@ -119,7 +119,7 @@ CREATE TEMP TABLE temp_spy (
     close REAL,
     change_percent REAL
 );
-.import './files/SPY.csv' temp_spy
+.import '../data/SPY.csv' temp_spy
 INSERT INTO spy (date, open, high, low, close, change_percent)
 SELECT date, open, high, low, close, change_percent FROM temp_spy;
 DROP TABLE temp_spy;
