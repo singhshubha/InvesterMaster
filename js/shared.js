@@ -1,47 +1,34 @@
-// Example: Fetch stock data using an API key
-
-const STOCK_API_KEY = 'd0ip4c1r01qusbepvh6gd0ip4c1r01qusbepvh70'; // Your Alpha Vantage API key
-const symbol = 'AAPL'; // Example stock symbol
-
-async function fetchStockData(symbol) {
-    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${STOCK_API_KEY}`;
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
-        console.log(data);
-        // Process your data here
-    } catch (error) {
-        console.error('Error fetching stock data:', error);
-    }
-}
-
-fetchStockData(symbol);
-
+// Base URL of the Flask API (server/app.py). Adjust if you deploy the backend elsewhere.
+const API_BASE_URL = 'http://localhost:5001';
 
 async function calculateReturns() {
     try {
         const stock = document.getElementById("stock").value;
         const amount = parseFloat(document.getElementById("amount").value);
-        const years = parseFloat(document.getElementById("years").value);
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
 
-        if (!stock || isNaN(amount) || isNaN(years) || amount <= 0 || years <= 0) {
-            showError("Please enter valid values");
+        if (!stock || isNaN(amount) || amount <= 0 || !startDate || !endDate || startDate >= endDate) {
+            showError("Please enter a stock, a positive amount, and a start date before the end date.");
             return;
         }
 
-        // For demo: Assume a fixed annual return rate (e.g., 7%)
-        const annualReturnRate = 0.07;
-        const futureValue = amount * Math.pow(1 + annualReturnRate, years);
-        const totalReturn = futureValue - amount;
+        const response = await fetch(`${API_BASE_URL}/api/calculate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                symbol: stock,
+                initial_amount: amount,
+                start_date: startDate,
+                end_date: endDate
+            })
+        });
 
-        const result = {
-            initial_investment: amount.toFixed(2),
-            years: years,
-            annual_return_rate: (annualReturnRate * 100).toFixed(2) + '%',
-            future_value: futureValue.toFixed(2),
-            total_return: totalReturn.toFixed(2)
-        };
+        const result = await response.json();
+        if (!response.ok) {
+            showError(result.error || "Calculation failed.");
+            return;
+        }
 
         displayResults(result);
     } catch (error) {
@@ -51,15 +38,16 @@ async function calculateReturns() {
 
 function displayResults(result) {
     const resultDiv = document.getElementById("result");
+    const returnClass = result.total_return >= 0 ? 'positive' : 'negative';
     resultDiv.innerHTML = `
         <div class="result-content">
             <h3>Investment Results</h3>
             <table class="result-table">
-                <tr><th>Initial Investment</th><td>$${result.initial_investment}</td></tr>
-                <tr><th>Investment Period</th><td>${result.years} years</td></tr>
-                <tr><th>Annual Return Rate</th><td>${result.annual_return_rate}</td></tr>
-                <tr><th>Future Value</th><td>$${result.future_value}</td></tr>
-                <tr><th>Total Return</th><td>$${result.total_return}</td></tr>
+                <tr><th>Symbol</th><td>${result.symbol}</td></tr>
+                <tr><th>Period</th><td>${result.start_date} to ${result.end_date}</td></tr>
+                <tr><th>Initial Investment</th><td>$${result.initial_investment.toFixed(2)}</td></tr>
+                <tr><th>Final Value</th><td>$${result.final_value.toFixed(2)}</td></tr>
+                <tr><th>Total Return</th><td class="${returnClass}">$${result.total_return.toFixed(2)} (${result.total_return_pct.toFixed(2)}%)</td></tr>
             </table>
         </div>`;
     resultDiv.style.display = "block";
@@ -135,7 +123,7 @@ function startQuoteSlideShow() {
 
 async function fetchNews() {
     try {
-        const response = await fetch('https://newsapi.org/v2/everything?q=stocks+finance&apiKey=43b766e2a83f4ecaa59b82db1751d737&pageSize=10');
+        const response = await fetch(`${API_BASE_URL}/api/news`);
         const data = await response.json();
         if (data.articles && data.articles.length > 0) {
             displayNews(data.articles);

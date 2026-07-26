@@ -530,6 +530,14 @@ header.hero p {
     text-align: right;
 }
 
+.result-table td.positive {
+    color: #1a7f37;
+}
+
+.result-table td.negative {
+    color: #b3261e;
+}
+
 .error {
     background: #fdeceb;
     color: #b3261e;

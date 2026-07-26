@@ -45,8 +45,12 @@ function renderCalculatorPage() {
                             <td><input type="number" id="amount" placeholder="Enter amount" required></td>
                         </tr>
                         <tr>
-                            <th>Investment Period (Years):</th>
-                            <td><input type="number" id="years" placeholder="Enter years" required></td>
+                            <th>Start Date</th>
+                            <td><input type="date" id="startDate" required></td>
+                        </tr>
+                        <tr>
+                            <th>End Date</th>
+                            <td><input type="date" id="endDate" required></td>
                         </tr>
                     </table>
                     <button type="button" class="calculator-button" id="calculateBtn">Calculate Returns</button>
