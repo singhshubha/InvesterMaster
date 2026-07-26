@@ -2,6 +2,40 @@
 const API_BASE_URL = 'http://localhost:5001';
 
 let resultChart = null;
+let compareChart = null;
+let luckChart = null;
+
+// Shades chart backgrounds gray during US recessions. Opt-in per chart via
+// `options.plugins.recessionShading.enabled` since it assumes category-scale
+// labels are 'YYYY-MM-DD' date strings, which isn't true for every chart on the page.
+const recessionShadingPlugin = {
+    id: 'recessionShading',
+    beforeDatasetsDraw(chart, args, opts) {
+        if (!opts || !opts.enabled || typeof US_RECESSIONS === 'undefined') return;
+        const labels = chart.data.labels;
+        if (!labels || !labels.length) return;
+
+        const xScale = chart.scales.x;
+        const { ctx, chartArea } = chart;
+        ctx.save();
+        ctx.fillStyle = 'rgba(120, 120, 120, 0.16)';
+        US_RECESSIONS.forEach((r) => {
+            const startIdx = labels.findIndex(d => d >= r.start);
+            let endIdx = -1;
+            for (let i = labels.length - 1; i >= 0; i--) {
+                if (labels[i] <= r.end) { endIdx = i; break; }
+            }
+            if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) return;
+            const xStart = xScale.getPixelForValue(startIdx);
+            const xEnd = xScale.getPixelForValue(endIdx);
+            ctx.fillRect(xStart, chartArea.top, Math.max(xEnd - xStart, 1), chartArea.bottom - chartArea.top);
+        });
+        ctx.restore();
+    }
+};
+if (typeof Chart !== 'undefined') {
+    Chart.register(recessionShadingPlugin);
+}
 
 async function calculateReturns() {
     try {
@@ -49,28 +83,29 @@ async function calculateReturns() {
 function displayResults(result) {
     const resultDiv = document.getElementById("result");
     const returnClass = result.total_return >= 0 ? 'positive' : 'negative';
-    const investedLabel = result.mode === 'dca' ? 'Total Invested' : 'Initial Investment';
+    const investedLabel = result.mode === 'dca' ? glossTerm('Total Invested', 'dca') : 'Initial Investment';
 
     const extraRows = [];
     if (result.expense_ratio_pct > 0 && result.final_value_fee_adjusted != null) {
-        extraRows.push(`<tr><th>Final Value (After ${result.expense_ratio_pct}% Fees)</th><td>$${result.final_value_fee_adjusted.toFixed(2)}</td></tr>`);
+        extraRows.push(`<tr><th>Final Value (After ${glossTerm(result.expense_ratio_pct + '% ' + 'Fees', 'expense-ratio')})</th><td>$${result.final_value_fee_adjusted.toFixed(2)}</td></tr>`);
     }
     if (result.adjust_inflation && result.final_value_real != null) {
-        extraRows.push(`<tr><th>Final Value (Inflation-Adjusted)</th><td>$${result.final_value_real.toFixed(2)}</td></tr>`);
+        extraRows.push(`<tr><th>${glossTerm('Final Value (Inflation-Adjusted)', 'inflation-adjusted')}</th><td>$${result.final_value_real.toFixed(2)}</td></tr>`);
     }
 
     resultDiv.innerHTML = `
         <div class="result-content">
             <h3>Investment Results</h3>
             <table class="result-table">
-                <tr><th>Symbol</th><td>${result.symbol} ${result.drip ? '(DRIP)' : ''}</td></tr>
+                <tr><th>Symbol</th><td>${result.symbol} ${result.drip ? glossTerm('(DRIP)', 'drip') : ''}</td></tr>
                 <tr><th>Period</th><td>${result.start_date} to ${result.end_date}</td></tr>
                 <tr><th>${investedLabel}</th><td>$${result.initial_investment.toFixed(2)}</td></tr>
                 <tr><th>Final Value</th><td>$${result.final_value.toFixed(2)}</td></tr>
-                <tr><th>Total Return</th><td class="${returnClass}">$${result.total_return.toFixed(2)} (${result.total_return_pct.toFixed(2)}%)</td></tr>
+                <tr><th>${glossTerm('Total Return', 'total-return')}</th><td class="${returnClass}">$${result.total_return.toFixed(2)} (${result.total_return_pct.toFixed(2)}%)</td></tr>
+                <tr><th>${glossTerm('Max Drawdown', 'max-drawdown')}</th><td class="negative">${result.max_drawdown_pct.toFixed(2)}% (on ${result.max_drawdown_date})</td></tr>
                 ${extraRows.join('')}
             </table>
-            <canvas id="resultChart" height="320"></canvas>
+            <div class="chart-wrap"><canvas id="resultChart"></canvas></div>
         </div>`;
     resultDiv.style.display = "block";
 
@@ -118,6 +153,18 @@ function renderResultChart(result) {
         });
     }
 
+    datasets.push({
+        label: 'Drawdown %',
+        data: result.series.map(p => p.drawdown_pct),
+        borderColor: 'rgba(179, 38, 30, 0.6)',
+        backgroundColor: 'rgba(179, 38, 30, 0.12)',
+        borderWidth: 1,
+        pointRadius: 0,
+        fill: true,
+        tension: 0.1,
+        yAxisID: 'y1'
+    });
+
     if (resultChart) {
         resultChart.destroy();
     }
@@ -127,12 +174,177 @@ function renderResultChart(result) {
         data: { labels: labels, datasets: datasets },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             scales: {
                 x: { ticks: { maxTicksLimit: 10 } },
-                y: { ticks: { callback: value => '$' + value.toLocaleString() } }
+                y: { ticks: { callback: value => '$' + value.toLocaleString() } },
+                y1: {
+                    position: 'right',
+                    suggestedMax: 0,
+                    suggestedMin: -100,
+                    grid: { drawOnChartArea: false },
+                    ticks: { callback: value => value + '%' }
+                }
             },
-            plugins: { legend: { position: 'bottom' } }
+            plugins: {
+                legend: { position: 'bottom' },
+                recessionShading: { enabled: true }
+            }
+        }
+    });
+}
+
+const COMPARE_COLORS = ['#2454ff', '#e07b00', '#1a7f37'];
+
+async function runComparison() {
+    const legendDiv = document.getElementById('compareLegend');
+    try {
+        const symbols = ['compareSymbol1', 'compareSymbol2', 'compareSymbol3']
+            .map(id => document.getElementById(id).value)
+            .filter(v => v);
+        const amount = parseFloat(document.getElementById('compareAmount').value);
+        const startDate = document.getElementById('compareStartDate').value;
+        const endDate = document.getElementById('compareEndDate').value;
+        const drip = document.getElementById('compareDrip').checked;
+
+        if (symbols.length < 1 || isNaN(amount) || amount <= 0 || !startDate || !endDate || startDate >= endDate) {
+            legendDiv.innerHTML = `<div class="error">Pick at least one asset, a positive amount, and a start date before the end date.</div>`;
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/compare`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ symbols, amount, start_date: startDate, end_date: endDate, drip })
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            legendDiv.innerHTML = `<div class="error">${result.error || 'Comparison failed.'}</div>`;
+            return;
+        }
+
+        renderCompareChart(result);
+
+        legendDiv.innerHTML = result.assets.map((asset, i) => `
+            <span class="legend-item">
+                <span class="legend-swatch" style="background:${COMPARE_COLORS[i]}"></span>
+                ${asset.label}: ${asset.total_return_pct.toFixed(2)}% (max drawdown ${asset.max_drawdown_pct.toFixed(2)}%)
+            </span>`).join('');
+    } catch (error) {
+        legendDiv.innerHTML = `<div class="error">Comparison failed: ${error.message}</div>`;
+    }
+}
+
+function renderCompareChart(result) {
+    const canvas = document.getElementById('compareChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    const labels = result.assets[0].series.map(p => p.date);
+    const datasets = result.assets.map((asset, i) => ({
+        label: asset.label,
+        data: asset.series.map(p => p.pct_return),
+        borderColor: COMPARE_COLORS[i],
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.1
+    }));
+
+    if (compareChart) compareChart.destroy();
+
+    compareChart = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { ticks: { maxTicksLimit: 10 } },
+                y: { ticks: { callback: value => value + '%' } }
+            },
+            plugins: {
+                legend: { position: 'bottom' },
+                recessionShading: { enabled: true }
+            }
+        }
+    });
+}
+
+async function runLuckSimulator() {
+    const runsDiv = document.getElementById('luckRuns');
+    try {
+        const symbol = document.getElementById('luckStock').value;
+        const amount = parseFloat(document.getElementById('luckAmount').value);
+        const durationYears = parseInt(document.getElementById('luckDuration').value, 10);
+        const firstStartDate = document.getElementById('luckFirstStart').value;
+        const count = parseInt(document.getElementById('luckCount').value, 10);
+        const drip = document.getElementById('luckDrip').checked;
+
+        if (!symbol || isNaN(amount) || amount <= 0 || !firstStartDate || isNaN(durationYears) || isNaN(count)) {
+            runsDiv.innerHTML = `<div class="error">Fill in stock, amount, hold length, start date, and number of runs.</div>`;
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/luck-simulator`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                symbol, amount, duration_years: durationYears,
+                first_start_date: firstStartDate, count, drip
+            })
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            runsDiv.innerHTML = `<div class="error">${result.error || 'Simulation failed.'}</div>`;
+            return;
+        }
+
+        renderLuckChart(result);
+
+        runsDiv.innerHTML = result.runs.map(r => {
+            if (r.final_value == null) {
+                return `<div class="luck-run-card"><div class="luck-run-start">${r.start_date}</div>No data</div>`;
+            }
+            const cls = r.total_return_pct >= 0 ? 'positive' : 'negative';
+            return `
+                <div class="luck-run-card">
+                    <div class="luck-run-start">${r.start_date} → ${r.end_date}</div>
+                    <div class="luck-run-return ${cls}">${r.total_return_pct.toFixed(1)}%</div>
+                </div>`;
+        }).join('');
+    } catch (error) {
+        runsDiv.innerHTML = `<div class="error">Simulation failed: ${error.message}</div>`;
+    }
+}
+
+function renderLuckChart(result) {
+    const canvas = document.getElementById('luckChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    const labels = result.runs.map(r => r.start_date);
+    const values = result.runs.map(r => r.total_return_pct);
+
+    if (luckChart) luckChart.destroy();
+
+    luckChart = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: `${result.duration_years}-Year Return by Start Date`,
+                data: values,
+                backgroundColor: values.map(v => v == null ? '#c8ccd8' : (v >= 0 ? 'rgba(26,127,55,0.7)' : 'rgba(179,38,30,0.7)'))
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { ticks: { callback: value => value + '%' } }
+            },
+            plugins: { legend: { display: false } }
         }
     });
 }

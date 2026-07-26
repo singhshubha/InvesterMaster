@@ -411,6 +411,16 @@ header.hero p {
         var(--rb-50);
 }
 
+.calculator-stack {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+}
+
 .calculator-container {
     width: 100%;
     max-width: 440px;
@@ -421,6 +431,206 @@ header.hero p {
     text-align: center;
     border-top: 4px solid var(--rb-600);
     margin: 0 20px;
+}
+
+/* Wide tool cards: results panel, compare mode, luck simulator */
+
+.tool-card {
+    width: 100%;
+    max-width: 900px;
+    background-color: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    box-shadow: var(--shadow-md);
+    border-top: 4px solid var(--rb-600);
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.tool-card h3 {
+    color: var(--rb-900);
+    font-size: 1.3em;
+    margin-bottom: 6px;
+}
+
+.tool-card .tool-desc {
+    color: var(--muted);
+    font-size: 0.92em;
+    margin-bottom: 20px;
+}
+
+.chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 380px;
+}
+
+.inline-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+    margin-bottom: 20px;
+}
+
+.inline-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.inline-form select,
+.inline-form input[type="number"],
+.inline-form input[type="date"] {
+    padding: 10px 12px;
+    font-size: 0.95em;
+    border-radius: var(--radius-sm);
+    border: 1px solid #dfe3f5;
+    background-color: var(--white);
+    color: var(--ink);
+}
+
+.inline-form select:focus,
+.inline-form input:focus {
+    outline: none;
+    border-color: var(--rb-500);
+    box-shadow: 0 0 0 3px var(--rb-100);
+}
+
+.inline-form .checkbox-field {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.tool-button {
+    padding: 12px 22px;
+    font-size: 0.95em;
+    font-weight: 700;
+    background: linear-gradient(120deg, var(--rb-700), var(--rb-500));
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+    white-space: nowrap;
+}
+
+.tool-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+    filter: brightness(1.05);
+}
+
+/* Scenario presets */
+
+.preset-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.preset-btn {
+    padding: 10px 18px;
+    font-size: 0.88em;
+    font-weight: 600;
+    background: var(--rb-50);
+    color: var(--rb-800);
+    border: 1px solid var(--rb-100);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.preset-btn:hover {
+    background: var(--rb-100);
+    transform: translateY(-1px);
+}
+
+/* Glossary tooltips */
+
+.gloss-term {
+    position: relative;
+    cursor: help;
+    border-bottom: 1px dotted var(--muted);
+}
+
+.gloss-tip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    z-index: 500;
+    width: 240px;
+    background: var(--rb-950);
+    color: var(--white);
+    font-size: 0.82em;
+    font-weight: 400;
+    line-height: 1.4;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    text-align: left;
+    white-space: normal;
+}
+
+.gloss-term:hover .gloss-tip,
+.gloss-term.open .gloss-tip {
+    display: block;
+}
+
+/* Comparison mode legend + luck simulator run cards */
+
+.compare-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 14px;
+    font-size: 0.88em;
+}
+
+.compare-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.compare-legend .legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.luck-runs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.luck-run-card {
+    background: var(--rb-50);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 0.85em;
+}
+
+.luck-run-card .luck-run-start {
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.luck-run-card .luck-run-return {
+    font-size: 1.1em;
+    font-weight: 700;
 }
 
 .calculator-container h2 {
@@ -551,6 +761,7 @@ header.hero p {
 
 .quotes-container {
     position: fixed;
+    z-index: 10;
     right: 30px;
     top: 50%;
     transform: translateY(-50%);
@@ -600,6 +811,14 @@ header.hero p {
 /* --------------------------------------------------------------------------
    Responsive
    -------------------------------------------------------------------------- */
+
+@media (min-width: 1181px) {
+    /* Reserve the fixed quotes sidebar's territory (340px wide + 30px offset + gap)
+       so the wide tool cards below don't get laid out underneath it. */
+    .calculator-page {
+        padding-right: 400px;
+    }
+}
 
 @media (max-width: 1180px) {
     .quotes-container {

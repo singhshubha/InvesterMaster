@@ -59,8 +59,16 @@ class PriceCache:
     @staticmethod
     def get_prices(conn, symbol, start_date, end_date, price_column):
         cached_min, cached_max = PriceCache._cached_range(conn, symbol)
-        if cached_min is None or cached_min > start_date or cached_max < end_date:
+        # Cached rows are only gap-free between cached_min and cached_max if every fetch
+        # widens that same contiguous span. So when the requested range pokes outside it,
+        # re-fetch the full enclosing span (old ∪ new) rather than just the new slice —
+        # fetching just the slice would leave a silent hole between the two islands.
+        if cached_min is None:
             PriceCache._fetch_and_cache(conn, symbol, start_date, end_date)
+        elif cached_min > start_date or cached_max < end_date:
+            fetch_start = min(cached_min, start_date)
+            fetch_end = max(cached_max, end_date)
+            PriceCache._fetch_and_cache(conn, symbol, fetch_start, fetch_end)
 
         return pd.read_sql_query(
             f"SELECT date, {price_column} AS price FROM stocks "
@@ -176,12 +184,21 @@ class InvestmentCalculator:
                     for v, d in zip(nominal_values, dates)
                 ]
 
+            drawdown_pct = []
+            peak = nominal_values[0]
+            for v in nominal_values:
+                peak = max(peak, v)
+                drawdown_pct.append(round((v / peak - 1) * 100, 2))
+            max_drawdown_pct = min(drawdown_pct)
+            max_drawdown_date = dates[drawdown_pct.index(max_drawdown_pct)]
+
             series = [
                 {
                     'date': dates[i],
                     'nominal': round(nominal_values[i], 2),
                     'real': round(real_values[i], 2) if real_values and real_values[i] is not None else None,
                     'fee_adjusted': round(fee_values[i], 2) if fee_values else None,
+                    'drawdown_pct': drawdown_pct[i],
                 }
                 for i in range(len(dates))
             ]
@@ -204,7 +221,47 @@ class InvestmentCalculator:
                 'final_value_fee_adjusted': series[-1]['fee_adjusted'],
                 'total_return': total_return,
                 'total_return_pct': total_return_pct,
+                'max_drawdown_pct': max_drawdown_pct,
+                'max_drawdown_date': max_drawdown_date,
                 'series': series,
             }
         finally:
             conn.close()
+
+    @staticmethod
+    def cash_series(dates, amount, apy_pct):
+        start_dt = datetime.strptime(dates[0], '%Y-%m-%d')
+        rate = apy_pct / 100
+        return [
+            amount * ((1 + rate) ** ((datetime.strptime(d, '%Y-%m-%d') - start_dt).days / 365.25))
+            for d in dates
+        ]
+
+    @staticmethod
+    def luck_simulator(symbol, amount, duration_years, first_start_date, count, drip):
+        today = datetime.utcnow().date()
+        runs = []
+        for i in range(count):
+            start_dt = pd.to_datetime(first_start_date) + pd.DateOffset(years=i)
+            end_dt = start_dt + pd.DateOffset(years=duration_years)
+            start_date = start_dt.strftime('%Y-%m-%d')
+            end_date = min(end_dt, pd.Timestamp(today)).strftime('%Y-%m-%d')
+
+            if start_date >= end_date:
+                continue
+
+            try:
+                result = InvestmentCalculator.calculate_returns(
+                    symbol, amount, start_date, end_date, mode='lump', drip=drip
+                )
+            except Exception:
+                result = None
+
+            runs.append({
+                'start_date': start_date,
+                'end_date': end_date,
+                'final_value': result['final_value'] if result else None,
+                'total_return_pct': result['total_return_pct'] if result else None,
+                'max_drawdown_pct': result['max_drawdown_pct'] if result else None,
+            })
+        return runs
