@@ -22,19 +22,31 @@ def calculate():
     symbol = (data.get('symbol') or '').strip()
     start_date = data.get('start_date')
     end_date = data.get('end_date')
+    mode = data.get('mode', 'lump')
+    drip = bool(data.get('drip', False))
+    adjust_inflation = bool(data.get('adjust_inflation', False))
 
     try:
-        amount = float(data.get('initial_amount'))
+        amount = float(data.get('amount'))
+        expense_ratio_pct = float(data.get('expense_ratio_pct') or 0)
         datetime.strptime(start_date, '%Y-%m-%d')
         datetime.strptime(end_date, '%Y-%m-%d')
     except (TypeError, ValueError):
-        return jsonify({'error': 'symbol, initial_amount, start_date and end_date (YYYY-MM-DD) are required.'}), 400
+        return jsonify({'error': 'symbol, amount, start_date and end_date (YYYY-MM-DD) are required.'}), 400
 
     if not symbol or amount <= 0 or start_date >= end_date:
         return jsonify({'error': 'Invalid input: check symbol, amount, and that start_date is before end_date.'}), 400
+    if mode not in ('lump', 'dca'):
+        return jsonify({'error': 'mode must be "lump" or "dca".'}), 400
+    if not (0 <= expense_ratio_pct <= 10):
+        return jsonify({'error': 'expense_ratio_pct must be between 0 and 10.'}), 400
 
     try:
-        result = InvestmentCalculator.calculate_returns(symbol, amount, start_date, end_date)
+        result = InvestmentCalculator.calculate_returns(
+            symbol, amount, start_date, end_date,
+            mode=mode, drip=drip, expense_ratio_pct=expense_ratio_pct,
+            adjust_inflation=adjust_inflation,
+        )
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

@@ -1,12 +1,18 @@
 // Base URL of the Flask API (server/app.py). Adjust if you deploy the backend elsewhere.
 const API_BASE_URL = 'http://localhost:5001';
 
+let resultChart = null;
+
 async function calculateReturns() {
     try {
         const stock = document.getElementById("stock").value;
+        const mode = document.getElementById("mode").value;
         const amount = parseFloat(document.getElementById("amount").value);
         const startDate = document.getElementById("startDate").value;
         const endDate = document.getElementById("endDate").value;
+        const drip = document.getElementById("drip").checked;
+        const adjustInflation = document.getElementById("adjustInflation").checked;
+        const expenseRatio = parseFloat(document.getElementById("expenseRatio").value) || 0;
 
         if (!stock || isNaN(amount) || amount <= 0 || !startDate || !endDate || startDate >= endDate) {
             showError("Please enter a stock, a positive amount, and a start date before the end date.");
@@ -18,9 +24,13 @@ async function calculateReturns() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 symbol: stock,
-                initial_amount: amount,
+                mode: mode,
+                amount: amount,
                 start_date: startDate,
-                end_date: endDate
+                end_date: endDate,
+                drip: drip,
+                adjust_inflation: adjustInflation,
+                expense_ratio_pct: expenseRatio
             })
         });
 
@@ -39,18 +49,92 @@ async function calculateReturns() {
 function displayResults(result) {
     const resultDiv = document.getElementById("result");
     const returnClass = result.total_return >= 0 ? 'positive' : 'negative';
+    const investedLabel = result.mode === 'dca' ? 'Total Invested' : 'Initial Investment';
+
+    const extraRows = [];
+    if (result.expense_ratio_pct > 0 && result.final_value_fee_adjusted != null) {
+        extraRows.push(`<tr><th>Final Value (After ${result.expense_ratio_pct}% Fees)</th><td>$${result.final_value_fee_adjusted.toFixed(2)}</td></tr>`);
+    }
+    if (result.adjust_inflation && result.final_value_real != null) {
+        extraRows.push(`<tr><th>Final Value (Inflation-Adjusted)</th><td>$${result.final_value_real.toFixed(2)}</td></tr>`);
+    }
+
     resultDiv.innerHTML = `
         <div class="result-content">
             <h3>Investment Results</h3>
             <table class="result-table">
-                <tr><th>Symbol</th><td>${result.symbol}</td></tr>
+                <tr><th>Symbol</th><td>${result.symbol} ${result.drip ? '(DRIP)' : ''}</td></tr>
                 <tr><th>Period</th><td>${result.start_date} to ${result.end_date}</td></tr>
-                <tr><th>Initial Investment</th><td>$${result.initial_investment.toFixed(2)}</td></tr>
+                <tr><th>${investedLabel}</th><td>$${result.initial_investment.toFixed(2)}</td></tr>
                 <tr><th>Final Value</th><td>$${result.final_value.toFixed(2)}</td></tr>
                 <tr><th>Total Return</th><td class="${returnClass}">$${result.total_return.toFixed(2)} (${result.total_return_pct.toFixed(2)}%)</td></tr>
+                ${extraRows.join('')}
             </table>
+            <canvas id="resultChart" height="320"></canvas>
         </div>`;
     resultDiv.style.display = "block";
+
+    renderResultChart(result);
+}
+
+function renderResultChart(result) {
+    const canvas = document.getElementById('resultChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    const labels = result.series.map(p => p.date);
+    const datasets = [{
+        label: 'Nominal Value',
+        data: result.series.map(p => p.nominal),
+        borderColor: '#2454ff',
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.1
+    }];
+
+    if (result.series.some(p => p.real !== null)) {
+        datasets.push({
+            label: 'Inflation-Adjusted',
+            data: result.series.map(p => p.real),
+            borderColor: '#b3261e',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [6, 4],
+            pointRadius: 0,
+            tension: 0.1
+        });
+    }
+
+    if (result.series.some(p => p.fee_adjusted !== null)) {
+        datasets.push({
+            label: 'After Fees',
+            data: result.series.map(p => p.fee_adjusted),
+            borderColor: '#8a8f98',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [2, 3],
+            pointRadius: 0,
+            tension: 0.1
+        });
+    }
+
+    if (resultChart) {
+        resultChart.destroy();
+    }
+
+    resultChart = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: { labels: labels, datasets: datasets },
+        options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { ticks: { maxTicksLimit: 10 } },
+                y: { ticks: { callback: value => '$' + value.toLocaleString() } }
+            },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
 }
 
 function showError(message) {

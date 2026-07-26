@@ -41,7 +41,16 @@ function renderCalculatorPage() {
                             <td><select id="stock">${optionsHtml}</select></td>
                         </tr>
                         <tr>
-                            <th>Investment Amount ($):</th>
+                            <th>Mode</th>
+                            <td>
+                                <select id="mode">
+                                    <option value="lump">Lump Sum</option>
+                                    <option value="dca">Dollar-Cost Averaging (Monthly)</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th id="amountLabel">Investment Amount ($):</th>
                             <td><input type="number" id="amount" placeholder="Enter amount" required></td>
                         </tr>
                         <tr>
@@ -51,6 +60,18 @@ function renderCalculatorPage() {
                         <tr>
                             <th>End Date</th>
                             <td><input type="date" id="endDate" required></td>
+                        </tr>
+                        <tr>
+                            <th>Reinvest Dividends (DRIP)</th>
+                            <td><input type="checkbox" id="drip" checked></td>
+                        </tr>
+                        <tr>
+                            <th>Adjust for Inflation</th>
+                            <td><input type="checkbox" id="adjustInflation"></td>
+                        </tr>
+                        <tr>
+                            <th>Annual Expense Ratio (%)</th>
+                            <td><input type="number" id="expenseRatio" placeholder="0.00" step="0.01" min="0" max="10" value="0"></td>
                         </tr>
                     </table>
                     <button type="button" class="calculator-button" id="calculateBtn">Calculate Returns</button>
@@ -67,6 +88,12 @@ mountLayout('calculator.html');
 document.getElementById('app').innerHTML = renderCalculatorPage();
 
 document.getElementById('calculateBtn').addEventListener('click', calculateReturns);
+
+document.getElementById('mode').addEventListener('change', (e) => {
+    document.getElementById('amountLabel').textContent = e.target.value === 'dca'
+        ? 'Monthly Contribution ($):'
+        : 'Investment Amount ($):';
+});
 
 const requestedStock = new URLSearchParams(window.location.search).get('stock');
 if (requestedStock) {
