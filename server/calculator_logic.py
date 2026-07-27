@@ -265,3 +265,41 @@ class InvestmentCalculator:
                 'max_drawdown_pct': result['max_drawdown_pct'] if result else None,
             })
         return runs
+
+    @staticmethod
+    def tax_comparison(symbol, amount, start_date, end_date, drip, capital_gains_tax_pct, ordinary_income_tax_pct):
+        """Grows `amount` along one real historical price path, then applies three
+        simplified account-type tax treatments to that SAME pre-tax trajectory so the
+        comparison isolates the effect of taxes, not differences in what was invested in.
+        This is an illustrative simplification, not tax advice: real accounts have
+        contribution limits, RMDs, state taxes, and early-withdrawal rules this ignores.
+        """
+        result = InvestmentCalculator.calculate_returns(symbol, amount, start_date, end_date, mode='lump', drip=drip)
+        if result is None:
+            return None
+
+        final_value = result['final_value']
+        gain = final_value - amount
+
+        taxable_gain_tax = max(gain, 0) * (capital_gains_tax_pct / 100)
+        taxable_after_tax = final_value - taxable_gain_tax
+
+        traditional_tax = final_value * (ordinary_income_tax_pct / 100)
+        traditional_after_tax = final_value - traditional_tax
+
+        roth_after_tax = final_value
+
+        return {
+            'symbol': result['symbol'],
+            'start_date': result['start_date'],
+            'end_date': result['end_date'],
+            'initial_investment': amount,
+            'pre_tax_final_value': final_value,
+            'capital_gains_tax_pct': capital_gains_tax_pct,
+            'ordinary_income_tax_pct': ordinary_income_tax_pct,
+            'accounts': {
+                'taxable': {'after_tax_value': round(taxable_after_tax, 2), 'tax_paid': round(taxable_gain_tax, 2)},
+                'roth': {'after_tax_value': round(roth_after_tax, 2), 'tax_paid': 0.0},
+                'traditional': {'after_tax_value': round(traditional_after_tax, 2), 'tax_paid': round(traditional_tax, 2)},
+            },
+        }

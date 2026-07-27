@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
+from advanced_analytics import PortfolioBuilder, RetirementProjector
 from calculator_logic import InvestmentCalculator
 
 load_dotenv()
