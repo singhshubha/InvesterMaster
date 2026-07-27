@@ -17,6 +17,13 @@ const COMPARE_OPTIONS = [
     { value: 'CASH', label: 'Savings Account (~4% APY)' }
 ];
 
+const PORTFOLIO_ASSET_OPTIONS = [
+    { value: '', label: '— Unused —' },
+    ...STOCK_OPTIONS,
+    { value: 'GLD', label: 'Gold (GLD)' },
+    { value: 'BND', label: 'Total Bond Market (BND)' }
+];
+
 const SCENARIO_PRESETS = [
     {
         label: 'The 2008 Investor',
@@ -52,6 +59,7 @@ const QUOTES = [
 function renderCalculatorPage() {
     const optionsHtml = STOCK_OPTIONS.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
     const compareOptionsHtml = COMPARE_OPTIONS.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+    const portfolioOptionsHtml = PORTFOLIO_ASSET_OPTIONS.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
     const quotesHtml = QUOTES.map(q => `
         <div class="quote-slide">
             <div class="quote-text">"${q.text}"</div>
@@ -176,6 +184,131 @@ function renderCalculatorPage() {
                     <div class="chart-wrap"><canvas id="luckChart"></canvas></div>
                     <div id="luckRuns" class="luck-runs"></div>
                 </div>
+
+                <div class="tool-card">
+                    <h3>Retirement Projector</h3>
+                    <p class="tool-desc">Monte Carlo bootstraps thousands of random future paths from a stock's historical daily returns. Historical Rolling instead walks every real historical window of that length — no randomness, just "what actually happened starting on every possible date." Both are probability cones, not predictions.</p>
+                    <div class="inline-form">
+                        <label>Stock
+                            <select id="retireStock">${optionsHtml}</select>
+                        </label>
+                        <label>Method
+                            <select id="retireMethod">
+                                <option value="monte_carlo">Monte Carlo (random)</option>
+                                <option value="historical_rolling">Historical Rolling (backtest)</option>
+                            </select>
+                        </label>
+                        <label>Initial Amount ($)
+                            <input type="number" id="retireInitial" value="10000">
+                        </label>
+                        <label>Monthly Contribution ($)
+                            <input type="number" id="retireMonthly" value="500">
+                        </label>
+                        <label>Years
+                            <input type="number" id="retireYears" value="20" min="1" max="30">
+                        </label>
+                        <label>Target Amount ($, optional)
+                            <input type="number" id="retireTarget" placeholder="e.g. 1000000">
+                        </label>
+                        <label># Simulations (Monte Carlo)
+                            <input type="number" id="retireSims" value="1000" min="100" max="2000" step="100">
+                        </label>
+                        <label class="checkbox-field">
+                            <input type="checkbox" id="retireDrip" checked> DRIP
+                        </label>
+                        <button type="button" class="tool-button" id="retireBtn">Run Projection</button>
+                    </div>
+                    <div class="chart-wrap"><canvas id="retireChart"></canvas></div>
+                    <div id="retireSummary" class="retire-summary"></div>
+                </div>
+
+                <div class="tool-card">
+                    <h3>Portfolio Builder</h3>
+                    <p class="tool-desc">Mix up to 4 assets by weight and see the combined historical performance, volatility, and Sharpe ratio — with none/annual/quarterly rebalancing compared side by side, including the tax cost of rebalancing in a taxable account.</p>
+                    <div class="inline-form">
+                        <label>Asset 1
+                            <select id="portSymbol1">${portfolioOptionsHtml}</select>
+                        </label>
+                        <label>Weight (%)
+                            <input type="number" id="portWeight1" value="60" min="0" max="100">
+                        </label>
+                        <label>Asset 2
+                            <select id="portSymbol2">${portfolioOptionsHtml}</select>
+                        </label>
+                        <label>Weight (%)
+                            <input type="number" id="portWeight2" value="20" min="0" max="100">
+                        </label>
+                        <label>Asset 3
+                            <select id="portSymbol3">${portfolioOptionsHtml}</select>
+                        </label>
+                        <label>Weight (%)
+                            <input type="number" id="portWeight3" value="20" min="0" max="100">
+                        </label>
+                        <label>Asset 4
+                            <select id="portSymbol4">${portfolioOptionsHtml}</select>
+                        </label>
+                        <label>Weight (%)
+                            <input type="number" id="portWeight4" value="0" min="0" max="100">
+                        </label>
+                    </div>
+                    <div class="inline-form">
+                        <label>Amount ($)
+                            <input type="number" id="portAmount" value="100000">
+                        </label>
+                        <label>Start Date
+                            <input type="date" id="portStartDate">
+                        </label>
+                        <label>End Date
+                            <input type="date" id="portEndDate">
+                        </label>
+                        <label>Account Type
+                            <select id="portAccountType">
+                                <option value="tax-advantaged">Tax-Advantaged (401k/IRA)</option>
+                                <option value="taxable">Taxable</option>
+                            </select>
+                        </label>
+                        <label>Capital Gains Tax (%)
+                            <input type="number" id="portCapGainsTax" value="15" min="0" max="50">
+                        </label>
+                        <label class="checkbox-field">
+                            <input type="checkbox" id="portDrip" checked> DRIP
+                        </label>
+                        <button type="button" class="tool-button" id="portBtn">Build Portfolio</button>
+                    </div>
+                    <div class="chart-wrap"><canvas id="portChart"></canvas></div>
+                    <div id="portTable"></div>
+                </div>
+
+                <div class="tool-card">
+                    <h3>Tax-Aware: Account Type Comparison</h3>
+                    <p class="tool-desc">The same real growth path, taxed three ways: Taxable (capital gains at sale), Traditional (withdrawals taxed as ordinary income), Roth (tax-free withdrawals). Simplified for illustration — it doesn't model Traditional's upfront tax deduction, contribution limits, or state taxes, so treat it as educational, not tax advice.</p>
+                    <div class="inline-form">
+                        <label>Stock
+                            <select id="taxStock">${optionsHtml}</select>
+                        </label>
+                        <label>Amount ($)
+                            <input type="number" id="taxAmount" value="10000">
+                        </label>
+                        <label>Start Date
+                            <input type="date" id="taxStartDate">
+                        </label>
+                        <label>End Date
+                            <input type="date" id="taxEndDate">
+                        </label>
+                        <label>Capital Gains Tax (%)
+                            <input type="number" id="taxCapGains" value="15" min="0" max="50">
+                        </label>
+                        <label>Ordinary Income Tax (%)
+                            <input type="number" id="taxOrdinary" value="24" min="0" max="50">
+                        </label>
+                        <label class="checkbox-field">
+                            <input type="checkbox" id="taxDrip" checked> DRIP
+                        </label>
+                        <button type="button" class="tool-button" id="taxBtn">Compare Accounts</button>
+                    </div>
+                    <div class="chart-wrap chart-wrap-sm"><canvas id="taxChart"></canvas></div>
+                    <div id="taxTable"></div>
+                </div>
             </div>
 
             <div class="quotes-container">${quotesHtml}</div>
@@ -188,6 +321,9 @@ document.getElementById('app').innerHTML = renderCalculatorPage();
 document.getElementById('calculateBtn').addEventListener('click', calculateReturns);
 document.getElementById('compareBtn').addEventListener('click', runComparison);
 document.getElementById('luckBtn').addEventListener('click', runLuckSimulator);
+document.getElementById('retireBtn').addEventListener('click', runRetirementProjector);
+document.getElementById('portBtn').addEventListener('click', runPortfolioBuilder);
+document.getElementById('taxBtn').addEventListener('click', runTaxComparison);
 
 document.getElementById('mode').addEventListener('change', (e) => {
     document.getElementById('amountLabel').textContent = e.target.value === 'dca'
@@ -218,6 +354,15 @@ document.getElementById('compareSymbol2').value = 'QQQ';
 document.getElementById('compareSymbol3').value = 'CASH';
 document.getElementById('compareStartDate').value = '2018-01-02';
 document.getElementById('compareEndDate').value = new Date().toISOString().slice(0, 10);
+
+document.getElementById('portSymbol1').value = 'SPY';
+document.getElementById('portSymbol2').value = 'QQQ';
+document.getElementById('portSymbol3').value = 'BND';
+document.getElementById('portStartDate').value = '2015-01-02';
+document.getElementById('portEndDate').value = new Date().toISOString().slice(0, 10);
+
+document.getElementById('taxStartDate').value = '2015-01-02';
+document.getElementById('taxEndDate').value = new Date().toISOString().slice(0, 10);
 
 const requestedStock = new URLSearchParams(window.location.search).get('stock');
 if (requestedStock) {

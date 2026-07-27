@@ -4,7 +4,9 @@ const GLOSSARY = {
     'expense-ratio': "A fund's annual operating cost, taken as a percentage of your investment regardless of performance. Even 1%/year quietly compounds into a large chunk of your gains over decades.",
     'inflation-adjusted': "Your portfolio's value restated in start-date dollars, so you see real purchasing power instead of just a bigger nominal number.",
     'max-drawdown': "The largest peak-to-trough decline your portfolio would have experienced — a measure of how much pain you'd have had to sit through to get the final result.",
-    'dca': "Dollar-Cost Averaging — investing a fixed amount on a regular schedule (e.g. monthly) instead of all at once, which smooths out the price you pay over time."
+    'dca': "Dollar-Cost Averaging — investing a fixed amount on a regular schedule (e.g. monthly) instead of all at once, which smooths out the price you pay over time.",
+    'volatility': "How much a portfolio's value swings up and down, measured as the annualized standard deviation of daily returns. Higher volatility means a bumpier ride, not necessarily a worse outcome.",
+    'sharpe': "Sharpe ratio — return earned per unit of volatility taken on, above a risk-free rate. Higher is better; it lets you compare a smooth 8% return to a bumpy 10% return on equal footing."
 };
 
 function glossTerm(label, key) {

@@ -4,6 +4,9 @@ const API_BASE_URL = 'http://localhost:5001';
 let resultChart = null;
 let compareChart = null;
 let luckChart = null;
+let retireChart = null;
+let portChart = null;
+let taxChart = null;
 
 // Shades chart backgrounds gray during US recessions. Opt-in per chart via
 // `options.plugins.recessionShading.enabled` since it assumes category-scale
@@ -343,6 +346,302 @@ function renderLuckChart(result) {
             maintainAspectRatio: false,
             scales: {
                 y: { ticks: { callback: value => value + '%' } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+async function runRetirementProjector() {
+    const summaryDiv = document.getElementById('retireSummary');
+    try {
+        const symbol = document.getElementById('retireStock').value;
+        const method = document.getElementById('retireMethod').value;
+        const initialAmount = parseFloat(document.getElementById('retireInitial').value);
+        const monthlyContribution = parseFloat(document.getElementById('retireMonthly').value) || 0;
+        const years = parseInt(document.getElementById('retireYears').value, 10);
+        const targetRaw = document.getElementById('retireTarget').value;
+        const targetAmount = targetRaw ? parseFloat(targetRaw) : null;
+        const numSimulations = parseInt(document.getElementById('retireSims').value, 10) || 1000;
+        const drip = document.getElementById('retireDrip').checked;
+
+        if (!symbol || isNaN(initialAmount) || initialAmount <= 0 || isNaN(years)) {
+            summaryDiv.innerHTML = `<div class="error">Fill in stock, a positive initial amount, and years.</div>`;
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/retirement-projector`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                symbol, method, initial_amount: initialAmount, monthly_contribution: monthlyContribution,
+                years, target_amount: targetAmount, num_simulations: numSimulations, drip
+            })
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            summaryDiv.innerHTML = `<div class="error">${result.error || 'Projection failed.'}</div>`;
+            return;
+        }
+
+        renderRetireChart(result);
+
+        const p10 = result.p10[result.p10.length - 1];
+        const p50 = result.p50[result.p50.length - 1];
+        const p90 = result.p90[result.p90.length - 1];
+        let html = `
+            <div class="retire-stat"><span class="retire-stat-label">Median outcome</span><span class="retire-stat-value">$${p50.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></div>
+            <div class="retire-stat"><span class="retire-stat-label">10th–90th percentile range</span><span class="retire-stat-value">$${p10.toLocaleString(undefined, { maximumFractionDigits: 0 })} – $${p90.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></div>
+            <div class="retire-stat"><span class="retire-stat-label">Simulated paths</span><span class="retire-stat-value">${result.num_paths}</span></div>`;
+        if (result.target_amount) {
+            html += `<div class="retire-stat"><span class="retire-stat-label">Chance of reaching $${result.target_amount.toLocaleString()}</span><span class="retire-stat-value">${result.success_rate_pct}%</span></div>`;
+            if (result.median_months_to_target != null) {
+                const yearsToTarget = (result.median_months_to_target / 12).toFixed(1);
+                html += `<div class="retire-stat"><span class="retire-stat-label">Median time to reach it</span><span class="retire-stat-value">${yearsToTarget} years</span></div>`;
+            }
+        }
+        summaryDiv.innerHTML = html;
+    } catch (error) {
+        summaryDiv.innerHTML = `<div class="error">Projection failed: ${error.message}</div>`;
+    }
+}
+
+function renderRetireChart(result) {
+    const canvas = document.getElementById('retireChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    const labels = result.months.map(m => (m / 12).toFixed(1));
+    const datasets = [
+        {
+            label: '90th percentile',
+            data: result.p90,
+            borderColor: 'rgba(37,65,178,0.4)',
+            backgroundColor: 'rgba(37,65,178,0.12)',
+            borderWidth: 1,
+            pointRadius: 0,
+            fill: false,
+            tension: 0.1
+        },
+        {
+            label: '10th–90th percentile range',
+            data: result.p10,
+            borderColor: 'rgba(37,65,178,0.4)',
+            backgroundColor: 'rgba(37,65,178,0.12)',
+            borderWidth: 1,
+            pointRadius: 0,
+            fill: '-1',
+            tension: 0.1
+        },
+        {
+            label: 'Median (p50)',
+            data: result.p50,
+            borderColor: '#2454ff',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: false,
+            tension: 0.1
+        }
+    ];
+
+    if (retireChart) retireChart.destroy();
+
+    retireChart = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { title: { display: true, text: 'Years' }, ticks: { maxTicksLimit: 12 } },
+                y: { ticks: { callback: value => '$' + value.toLocaleString() } }
+            },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+async function runPortfolioBuilder() {
+    const tableDiv = document.getElementById('portTable');
+    try {
+        const assets = [1, 2, 3, 4].map(i => ({
+            symbol: document.getElementById(`portSymbol${i}`).value,
+            weight: parseFloat(document.getElementById(`portWeight${i}`).value) || 0
+        })).filter(a => a.symbol && a.weight > 0);
+
+        const amount = parseFloat(document.getElementById('portAmount').value);
+        const startDate = document.getElementById('portStartDate').value;
+        const endDate = document.getElementById('portEndDate').value;
+        const accountType = document.getElementById('portAccountType').value;
+        const capGainsTax = parseFloat(document.getElementById('portCapGainsTax').value) || 0;
+        const drip = document.getElementById('portDrip').checked;
+
+        if (assets.length < 2 || isNaN(amount) || amount <= 0 || !startDate || !endDate || startDate >= endDate) {
+            tableDiv.innerHTML = `<div class="error">Pick at least 2 assets with weights, a positive amount, and a start date before the end date.</div>`;
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/portfolio`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                assets, amount, start_date: startDate, end_date: endDate, drip,
+                account_type: accountType, capital_gains_tax_pct: capGainsTax
+            })
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            tableDiv.innerHTML = `<div class="error">${result.error || 'Portfolio build failed.'}</div>`;
+            return;
+        }
+
+        renderPortChart(result);
+
+        const freqLabels = { none: 'No Rebalancing', annual: 'Annual', quarterly: 'Quarterly' };
+        const rows = ['none', 'annual', 'quarterly'].map(freq => {
+            const r = result.results[freq];
+            const cls = r.total_return_pct >= 0 ? 'positive' : 'negative';
+            return `
+                <tr>
+                    <th>${freqLabels[freq]}</th>
+                    <td>$${r.final_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                    <td class="${cls}">${r.total_return_pct.toFixed(2)}%</td>
+                    <td>${r.annualized_volatility_pct.toFixed(2)}%</td>
+                    <td>${r.sharpe_ratio != null ? r.sharpe_ratio.toFixed(2) : '—'}</td>
+                    <td class="negative">${r.max_drawdown_pct.toFixed(2)}%</td>
+                    <td>$${r.total_tax_paid.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                </tr>`;
+        }).join('');
+
+        tableDiv.innerHTML = `
+            <table class="result-table compare-table">
+                <tr><th>Rebalancing</th><th>Final Value</th><th>Total Return</th><th>${glossTerm('Volatility', 'volatility')}</th><th>${glossTerm('Sharpe', 'sharpe')}</th><th>${glossTerm('Max Drawdown', 'max-drawdown')}</th><th>Taxes Paid</th></tr>
+                ${rows}
+            </table>`;
+    } catch (error) {
+        tableDiv.innerHTML = `<div class="error">Portfolio build failed: ${error.message}</div>`;
+    }
+}
+
+function renderPortChart(result) {
+    const canvas = document.getElementById('portChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    const freqColors = { none: '#2454ff', annual: '#e07b00', quarterly: '#1a7f37' };
+    const freqLabels = { none: 'No Rebalancing', annual: 'Annual Rebalance', quarterly: 'Quarterly Rebalance' };
+    const labels = result.results.none.series.map(p => p.date);
+    const datasets = ['none', 'annual', 'quarterly'].map(freq => ({
+        label: freqLabels[freq],
+        data: result.results[freq].series.map(p => p.value),
+        borderColor: freqColors[freq],
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.1
+    }));
+
+    if (portChart) portChart.destroy();
+
+    portChart = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { ticks: { maxTicksLimit: 10 } },
+                y: { ticks: { callback: value => '$' + value.toLocaleString() } }
+            },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+async function runTaxComparison() {
+    const tableDiv = document.getElementById('taxTable');
+    try {
+        const symbol = document.getElementById('taxStock').value;
+        const amount = parseFloat(document.getElementById('taxAmount').value);
+        const startDate = document.getElementById('taxStartDate').value;
+        const endDate = document.getElementById('taxEndDate').value;
+        const capGains = parseFloat(document.getElementById('taxCapGains').value) || 0;
+        const ordinary = parseFloat(document.getElementById('taxOrdinary').value) || 0;
+        const drip = document.getElementById('taxDrip').checked;
+
+        if (!symbol || isNaN(amount) || amount <= 0 || !startDate || !endDate || startDate >= endDate) {
+            tableDiv.innerHTML = `<div class="error">Pick a stock, a positive amount, and a start date before the end date.</div>`;
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/tax-comparison`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                symbol, amount, start_date: startDate, end_date: endDate, drip,
+                capital_gains_tax_pct: capGains, ordinary_income_tax_pct: ordinary
+            })
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            tableDiv.innerHTML = `<div class="error">${result.error || 'Comparison failed.'}</div>`;
+            return;
+        }
+
+        renderTaxChart(result);
+
+        const accLabels = { taxable: 'Taxable', roth: 'Roth', traditional: 'Traditional' };
+        const rows = ['roth', 'taxable', 'traditional'].map(acc => {
+            const a = result.accounts[acc];
+            return `
+                <tr>
+                    <th>${accLabels[acc]}</th>
+                    <td>$${a.after_tax_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                    <td>$${a.tax_paid.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                </tr>`;
+        }).join('');
+
+        tableDiv.innerHTML = `
+            <table class="result-table compare-table">
+                <tr><th>Account</th><th>After-Tax Value</th><th>Tax Paid</th></tr>
+                ${rows}
+            </table>
+            <p class="tool-desc">Pre-tax growth (same for all three): $${result.pre_tax_final_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>`;
+    } catch (error) {
+        tableDiv.innerHTML = `<div class="error">Comparison failed: ${error.message}</div>`;
+    }
+}
+
+function renderTaxChart(result) {
+    const canvas = document.getElementById('taxChart');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    const accLabels = ['Roth', 'Taxable', 'Traditional'];
+    const values = [
+        result.accounts.roth.after_tax_value,
+        result.accounts.taxable.after_tax_value,
+        result.accounts.traditional.after_tax_value
+    ];
+
+    if (taxChart) taxChart.destroy();
+
+    taxChart = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: accLabels,
+            datasets: [{
+                label: 'After-Tax Value',
+                data: values,
+                backgroundColor: ['#1a7f37', '#2454ff', '#e07b00']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: {
+                x: { ticks: { callback: value => '$' + value.toLocaleString() } }
             },
             plugins: { legend: { display: false } }
         }
