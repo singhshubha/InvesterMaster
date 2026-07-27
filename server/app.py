@@ -164,6 +164,128 @@ def luck_simulator():
     return jsonify({'symbol': symbol.upper(), 'amount': amount, 'duration_years': duration_years, 'runs': runs})
 
 
+@app.route('/api/retirement-projector', methods=['POST'])
+def retirement_projector():
+    data = request.get_json(silent=True) or {}
+    symbol = (data.get('symbol') or '').strip()
+    method = data.get('method', 'monte_carlo')
+    drip = bool(data.get('drip', True))
+
+    try:
+        initial_amount = float(data.get('initial_amount'))
+        monthly_contribution = float(data.get('monthly_contribution') or 0)
+        years = int(data.get('years'))
+        num_simulations = int(data.get('num_simulations') or 1000)
+        target_amount = data.get('target_amount')
+        target_amount = float(target_amount) if target_amount not in (None, '') else None
+    except (TypeError, ValueError):
+        return jsonify({'error': 'symbol, initial_amount, and years are required.'}), 400
+
+    if not symbol or initial_amount <= 0 or monthly_contribution < 0:
+        return jsonify({'error': 'Invalid input: check symbol, initial_amount, and monthly_contribution.'}), 400
+    if method not in ('monte_carlo', 'historical_rolling'):
+        return jsonify({'error': 'method must be "monte_carlo" or "historical_rolling".'}), 400
+    if not (1 <= years <= 30):
+        return jsonify({'error': 'years must be between 1 and 30.'}), 400
+    if not (100 <= num_simulations <= 2000):
+        return jsonify({'error': 'num_simulations must be between 100 and 2000.'}), 400
+    if target_amount is not None and target_amount <= 0:
+        return jsonify({'error': 'target_amount must be positive if provided.'}), 400
+
+    try:
+        result = RetirementProjector.simulate(
+            symbol, initial_amount, monthly_contribution, years, target_amount,
+            method, num_simulations, drip,
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+    if result is None:
+        hint = ' Try "monte_carlo" or a shorter horizon.' if method == 'historical_rolling' else ''
+        return jsonify({'error': f'Not enough price history for "{symbol}" to run this projection.{hint}'}), 404
+    return jsonify(result)
+
+
+@app.route('/api/portfolio', methods=['POST'])
+def portfolio():
+    data = request.get_json(silent=True) or {}
+    raw_assets = data.get('assets') or []
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+    drip = bool(data.get('drip', True))
+    account_type = data.get('account_type', 'tax-advantaged')
+
+    try:
+        amount = float(data.get('amount'))
+        capital_gains_tax_pct = float(data.get('capital_gains_tax_pct') or 15)
+        risk_free_rate_pct = float(data.get('risk_free_rate_pct') or 2)
+        assets = [{'symbol': (a.get('symbol') or '').strip().upper(), 'weight': float(a.get('weight'))}
+                  for a in raw_assets if a.get('symbol')]
+        datetime.strptime(start_date, '%Y-%m-%d')
+        datetime.strptime(end_date, '%Y-%m-%d')
+    except (TypeError, ValueError):
+        return jsonify({'error': 'assets (symbol+weight), amount, start_date and end_date are required.'}), 400
+
+    if not (2 <= len(assets) <= 5):
+        return jsonify({'error': 'Provide between 2 and 5 assets.'}), 400
+    if len(set(a['symbol'] for a in assets)) != len(assets):
+        return jsonify({'error': 'Each asset symbol must be used only once.'}), 400
+    if abs(sum(a['weight'] for a in assets) - 100) > 0.5:
+        return jsonify({'error': 'Asset weights must sum to 100.'}), 400
+    if amount <= 0 or start_date >= end_date:
+        return jsonify({'error': 'Invalid input: check amount, and that start_date is before end_date.'}), 400
+    if account_type not in ('taxable', 'tax-advantaged'):
+        return jsonify({'error': 'account_type must be "taxable" or "tax-advantaged".'}), 400
+    if not (0 <= capital_gains_tax_pct <= 50):
+        return jsonify({'error': 'capital_gains_tax_pct must be between 0 and 50.'}), 400
+
+    try:
+        result = PortfolioBuilder.simulate(
+            assets, amount, start_date, end_date, drip, account_type,
+            capital_gains_tax_pct, risk_free_rate_pct,
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+    if result is None:
+        return jsonify({'error': 'No overlapping price data available for that combination of assets and dates.'}), 404
+    return jsonify(result)
+
+
+@app.route('/api/tax-comparison', methods=['POST'])
+def tax_comparison():
+    data = request.get_json(silent=True) or {}
+    symbol = (data.get('symbol') or '').strip()
+    start_date = data.get('start_date')
+    end_date = data.get('end_date')
+    drip = bool(data.get('drip', True))
+
+    try:
+        amount = float(data.get('amount'))
+        capital_gains_tax_pct = float(data.get('capital_gains_tax_pct') or 15)
+        ordinary_income_tax_pct = float(data.get('ordinary_income_tax_pct') or 22)
+        datetime.strptime(start_date, '%Y-%m-%d')
+        datetime.strptime(end_date, '%Y-%m-%d')
+    except (TypeError, ValueError):
+        return jsonify({'error': 'symbol, amount, start_date and end_date (YYYY-MM-DD) are required.'}), 400
+
+    if not symbol or amount <= 0 or start_date >= end_date:
+        return jsonify({'error': 'Invalid input: check symbol, amount, and that start_date is before end_date.'}), 400
+    if not (0 <= capital_gains_tax_pct <= 50) or not (0 <= ordinary_income_tax_pct <= 50):
+        return jsonify({'error': 'Tax rates must be between 0 and 50.'}), 400
+
+    try:
+        result = InvestmentCalculator.tax_comparison(
+            symbol, amount, start_date, end_date, drip, capital_gains_tax_pct, ordinary_income_tax_pct
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+    if result is None:
+        return jsonify({'error': f'No price data available for "{symbol}" in that date range.'}), 404
+    return jsonify(result)
+
+
 @app.route('/api/news', methods=['GET'])
 def news():
     if not NEWSAPI_KEY:
