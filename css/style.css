@@ -465,6 +465,43 @@ header.hero p {
     height: 380px;
 }
 
+.chart-wrap-sm {
+    height: 220px;
+}
+
+.retire-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.retire-stat {
+    background: var(--rb-50);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    min-width: 180px;
+}
+
+.retire-stat-label {
+    display: block;
+    font-size: 0.8em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.retire-stat-value {
+    display: block;
+    font-size: 1.15em;
+    font-weight: 700;
+    color: var(--rb-900);
+}
+
+.compare-table {
+    margin-top: 16px;
+}
+
 .inline-form {
     display: flex;
     flex-wrap: wrap;
