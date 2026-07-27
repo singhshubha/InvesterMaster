@@ -457,7 +457,15 @@ function renderRetireChart(result) {
                 x: { title: { display: true, text: 'Years' }, ticks: { maxTicksLimit: 12 } },
                 y: { ticks: { callback: value => '$' + value.toLocaleString() } }
             },
-            plugins: { legend: { position: 'bottom' } }
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    // The "90th percentile" dataset only exists to give the fill something
+                    // to shade down to — showing it as its own legend entry next to
+                    // "10th–90th percentile range" is redundant, so hide just that one.
+                    labels: { filter: item => item.text !== '90th percentile' }
+                }
+            }
         }
     });
 }
