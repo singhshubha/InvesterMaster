@@ -286,6 +286,15 @@ def tax_comparison():
     return jsonify(result)
 
 
+@app.route('/api/this-week-in-history', methods=['GET'])
+def this_week_in_history():
+    try:
+        facts = InvestmentCalculator.this_week_in_history()
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    return jsonify({'facts': facts})
+
+
 @app.route('/api/news', methods=['GET'])
 def news():
     if not NEWSAPI_KEY:

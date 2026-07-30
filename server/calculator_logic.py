@@ -267,6 +267,40 @@ class InvestmentCalculator:
         return runs
 
     @staticmethod
+    def this_week_in_history(symbols=None, lookback_years=None, amount=1000.0):
+        symbols = symbols or ['SPY', 'QQQ']
+        lookback_years = lookback_years or [5, 10, 15, 20]
+        today = datetime.utcnow().date()
+
+        facts = []
+        for symbol in symbols:
+            for years in lookback_years:
+                try:
+                    start_dt = today.replace(year=today.year - years)
+                except ValueError:
+                    start_dt = today.replace(year=today.year - years, day=28)  # Feb 29 in a non-leap target year
+
+                try:
+                    result = InvestmentCalculator.calculate_returns(
+                        symbol, amount, start_dt.strftime('%Y-%m-%d'), today.strftime('%Y-%m-%d'),
+                        mode='lump', drip=True,
+                    )
+                except Exception:
+                    result = None
+
+                if result:
+                    facts.append({
+                        'symbol': result['symbol'],
+                        'years_ago': years,
+                        'start_date': result['start_date'],
+                        'end_date': result['end_date'],
+                        'initial_investment': result['initial_investment'],
+                        'final_value': result['final_value'],
+                        'total_return_pct': result['total_return_pct'],
+                    })
+        return facts
+
+    @staticmethod
     def tax_comparison(symbol, amount, start_date, end_date, drip, capital_gains_tax_pct, ordinary_income_tax_pct):
         """Grows `amount` along one real historical price path, then applies three
         simplified account-type tax treatments to that SAME pre-tax trajectory so the
