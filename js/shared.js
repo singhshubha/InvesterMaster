@@ -7,6 +7,7 @@ let luckChart = null;
 let retireChart = null;
 let portChart = null;
 let taxChart = null;
+let lastResult = null;
 
 // Shades chart backgrounds gray during US recessions. Opt-in per chart via
 // `options.plugins.recessionShading.enabled` since it assumes category-scale
@@ -78,12 +79,14 @@ async function calculateReturns() {
         }
 
         displayResults(result);
+        updateShareableURL(result);
     } catch (error) {
         showError("Calculation failed: " + error.message);
     }
 }
 
 function displayResults(result) {
+    lastResult = result;
     const resultDiv = document.getElementById("result");
     const returnClass = result.total_return >= 0 ? 'positive' : 'negative';
     const investedLabel = result.mode === 'dca' ? glossTerm('Total Invested', 'dca') : 'Initial Investment';
@@ -109,10 +112,158 @@ function displayResults(result) {
                 ${extraRows.join('')}
             </table>
             <div class="chart-wrap"><canvas id="resultChart"></canvas></div>
+
+            <div class="share-actions">
+                <button type="button" class="tool-button" id="shareImageBtn">Download Share Image</button>
+                <button type="button" class="tool-button tool-button-alt" id="copyShareTextBtn">Copy Share Text</button>
+                <button type="button" class="tool-button tool-button-alt" id="toggleEmbedBtn">Get Embed Code</button>
+            </div>
+            <div id="embedPanel" class="embed-panel" style="display: none;">
+                <textarea id="embedCodeText" readonly rows="2"></textarea>
+                <button type="button" class="tool-button tool-button-alt" id="copyEmbedBtn">Copy Code</button>
+            </div>
         </div>`;
     resultDiv.style.display = "block";
 
     renderResultChart(result);
+
+    document.getElementById('shareImageBtn').addEventListener('click', downloadShareImage);
+    document.getElementById('copyShareTextBtn').addEventListener('click', copyShareText);
+    document.getElementById('toggleEmbedBtn').addEventListener('click', toggleEmbedCode);
+    document.getElementById('copyEmbedBtn').addEventListener('click', copyEmbedCode);
+}
+
+function shareableParams(result) {
+    const params = new URLSearchParams();
+    params.set('ticker', result.symbol);
+    params.set('mode', result.mode);
+    params.set('amount', document.getElementById('amount').value);
+    params.set('start', result.start_date);
+    params.set('end', result.end_date);
+    params.set('drip', result.drip ? '1' : '0');
+    if (result.adjust_inflation) params.set('inflation', '1');
+    if (result.expense_ratio_pct > 0) params.set('fee', result.expense_ratio_pct);
+    return params;
+}
+
+function updateShareableURL(result) {
+    const params = shareableParams(result);
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+}
+
+function shareHeadline(result) {
+    if (result.mode === 'dca') {
+        return {
+            lead: `Dollar-cost averaging into ${result.symbol}`,
+            period: `from ${result.start_date} to ${result.end_date}`
+        };
+    }
+    return {
+        lead: `If you invested $${Math.round(result.initial_investment).toLocaleString()} in ${result.symbol}`,
+        period: `on ${result.start_date}`
+    };
+}
+
+function renderShareCard(result) {
+    let el = document.getElementById('shareCard');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'shareCard';
+        document.body.appendChild(el);
+    }
+    const { lead, period } = shareHeadline(result);
+    const returnPositive = result.total_return_pct >= 0;
+    const returnSign = returnPositive ? '+' : '';
+
+    el.innerHTML = `
+        <div class="share-card-brand"><span>📈</span> InvesterMaster</div>
+        <div class="share-card-body">
+            <div class="share-card-lede">${lead}</div>
+            <div class="share-card-lede">${period}</div>
+            <div class="share-card-sub">you'd have today:</div>
+            <div class="share-card-headline">$${Math.round(result.final_value).toLocaleString()}</div>
+        </div>
+        <div class="share-card-footer">
+            <span class="${returnPositive ? 'share-card-positive' : 'share-card-negative'}">${returnSign}${result.total_return_pct.toFixed(1)}% total return</span>
+            <span>Max drawdown: ${result.max_drawdown_pct.toFixed(1)}%</span>
+        </div>`;
+    return el;
+}
+
+async function downloadShareImage() {
+    const btn = document.getElementById('shareImageBtn');
+    if (!lastResult || !btn) return;
+    if (typeof html2canvas === 'undefined') {
+        flashButtonLabel('shareImageBtn', 'Image generator unavailable');
+        return;
+    }
+
+    const el = renderShareCard(lastResult);
+    const originalText = btn.textContent;
+    btn.textContent = 'Generating…';
+    btn.disabled = true;
+    try {
+        const canvas = await html2canvas(el, { width: 1200, height: 630, scale: 1, backgroundColor: null });
+        const link = document.createElement('a');
+        link.download = `investermaster-${lastResult.symbol}-${lastResult.start_date}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    } catch (error) {
+        flashButtonLabel('shareImageBtn', 'Failed — try again');
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}
+
+async function copyShareText() {
+    if (!lastResult) return;
+    const { lead, period } = shareHeadline(lastResult);
+    const returnSign = lastResult.total_return_pct >= 0 ? '+' : '';
+    const text = `${lead} ${period}, you'd have $${Math.round(lastResult.final_value).toLocaleString()} today `
+        + `(${returnSign}${lastResult.total_return_pct.toFixed(1)}%). Calculated with InvesterMaster: ${window.location.href}`;
+    try {
+        await navigator.clipboard.writeText(text);
+        flashButtonLabel('copyShareTextBtn', 'Copied!');
+    } catch (error) {
+        flashButtonLabel('copyShareTextBtn', 'Copy failed');
+    }
+}
+
+function toggleEmbedCode() {
+    const panel = document.getElementById('embedPanel');
+    if (!panel || !lastResult) return;
+    const isHidden = panel.style.display === 'none' || !panel.style.display;
+
+    if (isHidden) {
+        const params = shareableParams(lastResult);
+        const basePath = window.location.pathname.replace(/calculator\.html$/, '');
+        const embedUrl = `${window.location.origin}${basePath}embed.html?${params.toString()}`;
+        const snippet = `<iframe src="${embedUrl}" width="480" height="640" style="border:0; border-radius:12px;" loading="lazy"></iframe>`;
+        document.getElementById('embedCodeText').value = snippet;
+    }
+    panel.style.display = isHidden ? 'block' : 'none';
+}
+
+async function copyEmbedCode() {
+    const textarea = document.getElementById('embedCodeText');
+    if (!textarea) return;
+    try {
+        await navigator.clipboard.writeText(textarea.value);
+        flashButtonLabel('copyEmbedBtn', 'Copied!');
+    } catch (error) {
+        textarea.select();
+        flashButtonLabel('copyEmbedBtn', 'Select & Ctrl+C');
+    }
+}
+
+function flashButtonLabel(id, label) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    const original = btn.textContent;
+    btn.textContent = label;
+    setTimeout(() => { btn.textContent = original; }, 1800);
 }
 
 function renderResultChart(result) {

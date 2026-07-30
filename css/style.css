@@ -670,6 +670,105 @@ header.hero p {
     font-weight: 700;
 }
 
+/* Share / embed actions */
+
+.share-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.tool-button-alt {
+    background: var(--rb-50);
+    color: var(--rb-800);
+    border: 1px solid var(--rb-100);
+}
+
+.tool-button-alt:hover {
+    background: var(--rb-100);
+}
+
+.embed-panel {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 12px;
+}
+
+.embed-panel textarea {
+    flex: 1;
+    padding: 10px 12px;
+    font-family: monospace;
+    font-size: 0.82em;
+    border-radius: var(--radius-sm);
+    border: 1px solid #dfe3f5;
+    resize: vertical;
+    color: var(--ink);
+    background: var(--rb-50);
+}
+
+/* Offscreen 1200x630 card rendered to PNG via html2canvas */
+
+#shareCard {
+    position: fixed;
+    top: 0;
+    left: -10000px;
+    width: 1200px;
+    height: 630px;
+    box-sizing: border-box;
+    padding: 64px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: linear-gradient(135deg, var(--rb-900) 0%, var(--rb-700) 55%, var(--rb-600) 100%);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+}
+
+.share-card-brand {
+    font-size: 30px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.share-card-lede {
+    font-size: 30px;
+    opacity: 0.9;
+    line-height: 1.35;
+}
+
+.share-card-sub {
+    font-size: 26px;
+    opacity: 0.8;
+    margin-top: 22px;
+}
+
+.share-card-headline {
+    font-size: 96px;
+    font-weight: 800;
+    color: var(--gold-light);
+    line-height: 1.05;
+}
+
+.share-card-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 24px;
+    opacity: 0.95;
+    font-weight: 600;
+}
+
+.share-card-positive {
+    color: #8ee6a8;
+}
+
+.share-card-negative {
+    color: #ff9d94;
+}
+
 .calculator-container h2 {
     color: var(--rb-900);
     font-size: 1.6em;
