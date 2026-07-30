@@ -364,10 +364,28 @@ document.getElementById('portEndDate').value = new Date().toISOString().slice(0,
 document.getElementById('taxStartDate').value = '2015-01-02';
 document.getElementById('taxEndDate').value = new Date().toISOString().slice(0, 10);
 
-const requestedStock = new URLSearchParams(window.location.search).get('stock');
+// Restore a shared calculator state from the URL (?ticker=SPY&amount=10000&start=...&end=...),
+// and auto-run it so a pasted link reproduces the exact result that was shared.
+const urlParams = new URLSearchParams(window.location.search);
+const requestedStock = urlParams.get('ticker') || urlParams.get('stock');
 if (requestedStock) {
     const stockSelect = document.getElementById('stock');
     if (stockSelect.querySelector(`option[value="${requestedStock}"]`)) {
         stockSelect.value = requestedStock;
     }
+}
+if (urlParams.get('mode') === 'dca' || urlParams.get('mode') === 'lump') {
+    const modeSelect = document.getElementById('mode');
+    modeSelect.value = urlParams.get('mode');
+    modeSelect.dispatchEvent(new Event('change'));
+}
+if (urlParams.has('amount')) document.getElementById('amount').value = urlParams.get('amount');
+if (urlParams.has('start')) document.getElementById('startDate').value = urlParams.get('start');
+if (urlParams.has('end')) document.getElementById('endDate').value = urlParams.get('end');
+if (urlParams.has('drip')) document.getElementById('drip').checked = urlParams.get('drip') !== '0';
+if (urlParams.has('inflation')) document.getElementById('adjustInflation').checked = urlParams.get('inflation') === '1';
+if (urlParams.has('fee')) document.getElementById('expenseRatio').value = urlParams.get('fee');
+
+if (urlParams.has('amount') && urlParams.has('start') && urlParams.has('end')) {
+    calculateReturns();
 }
