@@ -45,7 +45,7 @@ function renderNavbar(activeHref) {
 
 function renderFooter() {
     const footerLinksHtml = FOOTER_LINKS.map(link => `<a href="${link.href}">${link.label}</a>`).join('');
-    const socialLinksHtml = SOCIAL_LINKS.map(link => `<a href="${link.href}"><i class="fab ${link.icon}"></i></a>`).join('');
+    const socialLinksHtml = SOCIAL_LINKS.map(link => `<a href="${link.href}" target="_blank" rel="noopener noreferrer"><i class="fab ${link.icon}"></i></a>`).join('');
 
     return `
         <footer class="footer">

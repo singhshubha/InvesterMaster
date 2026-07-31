@@ -11,7 +11,7 @@ const FEATURE_CARDS = [
     {
         action: 'portfolio',
         icon: 'fa-chart-line',
-        title: 'Portfo Tracker',
+        title: 'Portfolio Tracker',
         description: 'Monitor and analyze your investments in real-time'
     },
     {
