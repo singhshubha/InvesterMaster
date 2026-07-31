@@ -820,6 +820,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('newsContainer')) {
         fetchNews();
     }
+    if (document.getElementById('historyContainer')) {
+        fetchHistory();
+    }
     setupNavToggle();
     setupScrollReveal();
 });
@@ -949,4 +952,89 @@ function rotateNews() {
             newSlide.classList.add('active');
         }, 500);
     }, 5000);
+}
+
+function historyFactSlideHtml(fact) {
+    const returnSign = fact.total_return_pct >= 0 ? '+' : '';
+    const params = new URLSearchParams({
+        ticker: fact.symbol,
+        amount: fact.initial_investment,
+        start: fact.start_date,
+        end: fact.end_date
+    });
+    return `
+        <div class="news-title">$${fact.initial_investment.toLocaleString()} in ${fact.symbol}, ${fact.years_ago} years ago</div>
+        <div class="news-content">
+            On ${fact.start_date} you'd have put in $${fact.initial_investment.toLocaleString()}.
+            Today that's worth $${Math.round(fact.final_value).toLocaleString()}
+            (${returnSign}${fact.total_return_pct.toFixed(1)}%).
+            <a href="calculator.html?${params.toString()}">Try your own date &rarr;</a>
+        </div>`;
+}
+
+async function fetchHistory() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/this-week-in-history`);
+        const data = await response.json();
+        if (data.facts && data.facts.length > 0) {
+            displayHistory(data.facts);
+        }
+    } catch (error) {
+        console.error('Failed to fetch history:', error);
+        const historyContainer = document.getElementById('historyContainer');
+        if (historyContainer) {
+            historyContainer.innerHTML = `
+                <div class="news-slide active">
+                    <div class="news-title">Error loading historical scenarios</div>
+                    <div class="news-content">Unable to fetch the latest numbers.</div>
+                </div>`;
+        }
+    }
+}
+
+function displayHistory(facts) {
+    const historyContainer = document.getElementById('historyContainer');
+    if (!historyContainer) return;
+
+    historyContainer.innerHTML = '';
+
+    const slide = document.createElement('div');
+    slide.className = 'news-slide';
+    slide.innerHTML = historyFactSlideHtml(facts[0]);
+    historyContainer.appendChild(slide);
+
+    void slide.offsetWidth;
+    slide.classList.add('active');
+
+    window.historyFacts = facts;
+    window.currentHistoryIndex = 0;
+
+    if (facts.length > 1) {
+        rotateHistory();
+    }
+}
+
+function rotateHistory() {
+    if (!window.historyFacts || window.historyFacts.length < 2) return;
+
+    setInterval(() => {
+        const historyContainer = document.getElementById('historyContainer');
+        const currentSlide = historyContainer.querySelector('.news-slide');
+        currentSlide.classList.remove('active');
+
+        window.currentHistoryIndex = (window.currentHistoryIndex + 1) % window.historyFacts.length;
+        const nextFact = window.historyFacts[window.currentHistoryIndex];
+
+        setTimeout(() => {
+            const newSlide = document.createElement('div');
+            newSlide.className = 'news-slide';
+            newSlide.innerHTML = historyFactSlideHtml(nextFact);
+
+            historyContainer.innerHTML = '';
+            historyContainer.appendChild(newSlide);
+
+            void newSlide.offsetWidth;
+            newSlide.classList.add('active');
+        }, 500);
+    }, 6000);
 }

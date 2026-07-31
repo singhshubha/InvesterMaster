@@ -39,6 +39,21 @@ function renderHome() {
         <div class="container">${cardsHtml}</div>
 
         <div class="news-title-section">
+            <h2>This Week in History</h2>
+        </div>
+
+        <section class="news-section">
+            <div class="news-container">
+                <div id="historyContainer">
+                    <div class="news-slide active">
+                        <div class="news-title">Crunching the numbers...</div>
+                        <div class="news-content">Please wait while we look up what real historical investments would be worth today.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="news-title-section">
             <h2>What's on the News?</h2>
         </div>
 

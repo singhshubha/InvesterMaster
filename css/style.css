@@ -59,6 +59,54 @@ img {
 }
 
 /* --------------------------------------------------------------------------
+   Embeddable widget (embed.html) — meant to be <iframe>'d on other sites
+   -------------------------------------------------------------------------- */
+
+.embed-body {
+    background: var(--white);
+    min-height: unset;
+}
+
+.embed-container {
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 24px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.embed-header {
+    color: var(--rb-900);
+    font-size: 1.25em;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+
+.embed-header i {
+    color: var(--gold);
+    margin-right: 6px;
+}
+
+.embed-branding {
+    display: block;
+    margin-top: 16px;
+    font-size: 0.8em;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.embed-branding:hover {
+    color: var(--rb-600);
+}
+
+/* Sharing your own result from inside an embedded widget is a bit recursive —
+   hide those controls there, they're for the full calculator page. */
+.embed-body .share-actions,
+.embed-body .embed-panel {
+    display: none !important;
+}
+
+/* --------------------------------------------------------------------------
    Navigation bar (shared across pages)
    -------------------------------------------------------------------------- */
 
