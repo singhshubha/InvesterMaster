@@ -867,15 +867,43 @@ function setupScrollReveal() {
 }
 
 function startQuoteSlideShow() {
-    let currentSlide = 0;
     const slides = document.querySelectorAll('.quote-slide');
-    slides[currentSlide].classList.add('active');
+    const dots = document.querySelectorAll('.quote-dot');
+    if (!slides.length) return;
 
-    setInterval(() => {
+    let currentSlide = 0;
+    let timer = null;
+
+    function showSlide(index) {
         slides[currentSlide].classList.remove('active');
-        currentSlide = (currentSlide + 1) % slides.length;
+        if (dots[currentSlide]) dots[currentSlide].classList.remove('active');
+        currentSlide = index;
         slides[currentSlide].classList.add('active');
-    }, 5000);
+        if (dots[currentSlide]) dots[currentSlide].classList.add('active');
+    }
+
+    function restartTimer() {
+        clearInterval(timer);
+        timer = setInterval(() => showSlide((currentSlide + 1) % slides.length), 6000);
+    }
+
+    showSlide(0);
+    restartTimer();
+
+    // Clicking a dot jumps straight to that quote and resets the auto-advance clock;
+    // hovering the card pauses it so a longer quote doesn't get cut off mid-read.
+    dots.forEach((dot, i) => {
+        dot.addEventListener('click', () => {
+            showSlide(i);
+            restartTimer();
+        });
+    });
+
+    const container = document.querySelector('.quotes-container');
+    if (container) {
+        container.addEventListener('mouseenter', () => clearInterval(timer));
+        container.addEventListener('mouseleave', restartTimer);
+    }
 }
 
 async function fetchNews() {
