@@ -67,6 +67,10 @@ InvestorMaster is a stock market analysis and calculation tool that helps invest
   
   - Store and query data from the database.
 
-7. Contributing
+7. Roadmap
+
+  - News sentiment model: predicts next day stock direction from news headlines, scored with FinBERT and deployed as a daily pipeline. See [docs/SENTIMENT_PLAN.md](docs/SENTIMENT_PLAN.md).
+
+8. Contributing
 
   Pull requests are welcome! For major changes, please open an issue first to discuss the proposed update.
