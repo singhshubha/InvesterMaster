@@ -56,6 +56,17 @@ InvestorMaster is a stock market analysis and calculation tool that helps invest
     - js/ — components.js (navbar/footer), shared.js (utilities, API calls), home.js, calculator.js (per-page rendering)
     - server/ — Flask backend (`app.py`, `calculator_logic.py`), DB setup scripts, `.env.example`
     - data/ — stocks.db and historical CSV datasets
+    - server/analytics_views.sql — clean analysis views (daily/monthly returns, drawdown, CPI-adjusted real returns, index levels, ticker coverage)
+    - scripts/export_powerbi.py — exports the views to powerbi_export/ for Power BI or Excel
+    - powerbi_export/ — committed CSV snapshot used by the dashboard
+
+    Power BI / analytics export
+
+    - python scripts/export_powerbi.py
+    - Opens stocks.db read-only (views are created as TEMP views), so the export never modifies the database or calls yfinance.
+    - Monte Carlo projections reuse RetirementProjector with a fixed seed (42), so the snapshot is reproducible.
+    - powerbi_export/kpi_definitions.csv documents every KPI formula; data_quality.csv and data_quality_before_fix.csv show the data-quality checks after and before cleanup.
+    - To make the views permanent (e.g. for ODBC): sqlite3 data/stocks.db < server/analytics_views.sql
 
 6. Usage
 

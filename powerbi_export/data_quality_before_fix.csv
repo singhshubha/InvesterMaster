@@ -1,0 +1,9 @@
+check,rows_affected
+Header row imported as data in index tables,4
+"Text (non-numeric) change_percent in index tables, excl. header rows",5
+"Fully NULL columns in stocks (pct_change, change_percent, avg_vol_20d)",33333
+Zero-volume rows in stocks,2
+"Duplicate (symbol, date) in stocks",0
+Weekend dates in stocks,0
+Missing CPI months,1
+QQQ legacy table vs stocks: dates differing > $0.01,424

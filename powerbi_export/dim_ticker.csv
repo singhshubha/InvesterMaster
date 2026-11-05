@@ -1,0 +1,8 @@
+symbol,first_date,last_date,trading_days,asset_class
+AAPL,1980-12-12,2026-11-05,11568,Single stock
+AMZN,1997-05-15,2026-11-05,7416,Single stock
+BND,2007-04-10,2026-11-05,4927,Bond ETF
+GOOGL,2004-08-19,2026-11-05,5590,Single stock
+MSFT,1986-03-13,2026-11-05,10242,Single stock
+QQQ,1999-03-10,2026-11-05,6959,Equity ETF
+SPY,1993-01-29,2026-11-05,8501,Equity ETF

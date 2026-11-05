@@ -1,0 +1,10 @@
+check,rows_affected
+Header row imported as data in index tables,0
+"Text (non-numeric) change_percent in index tables, excl. header rows",0
+Zero or NULL volume rows in stocks,2
+Tickers whose last date trails the latest date in stocks,0
+Non-holiday gaps > 5 calendar days in stocks (excl. 2001-09-11 closure),0
+"Duplicate (symbol, date) in stocks",0
+Weekend dates in stocks,0
+Missing CPI months,1
+QQQ legacy table vs stocks: dates differing > $0.01,424

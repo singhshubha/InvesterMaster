@@ -1,0 +1,10 @@
+kpi,definition,source_table
+Total Return,"End adjusted close / start adjusted close - 1, over the selected months.",fact_monthly
+CAGR,(1 + Total Return) ^ (12 / months in window) - 1.,fact_monthly
+Annualized Volatility,"Sample std dev of monthly returns x sqrt(12). (The app uses daily returns x sqrt(252), so values differ slightly.)",fact_monthly
+Sharpe Ratio,(CAGR - risk-free rate) / Annualized Volatility. Risk-free rate is a what-if parameter (app default 2%).,fact_monthly
+Max Drawdown,"Lowest daily drawdown_from_peak in the selected dates, where the peak is the running all-time high since the ticker's first cached date.",fact_daily
+Real CAGR,"(1 + CAGR) / (1 + CPI CAGR) - 1, using CPI-U (FRED CPIAUCSL), latest reading on or before each month end.",fact_monthly
+Rolling 12M Volatility,Std dev of the trailing 12 monthly returns x sqrt(12).,fact_monthly
+Rolling N-Year CAGR,Price-only CAGR of the S&P 500 index for every monthly start date with N full years of data after it. Excludes dividends.,rolling_windows
+Monte Carlo percentiles,"Bootstrap of historical daily returns in 21-day months, same method as /api/retirement-projector, seed 42.",mc_projections
