@@ -14,8 +14,15 @@ class RetirementProjector:
         conn = sqlite3.connect(DB_PATH)
         try:
             price_column = 'adjusted_close' if drip else 'close'
-            today = pd.Timestamp.utcnow().strftime('%Y-%m-%d')
-            df = PriceCache.get_prices(conn, symbol.upper().strip(), '1970-01-01', today, price_column)
+            symbol = symbol.upper().strip()
+            # Use the full cached history when there is one. Asking for 1970-to-today always
+            # fell outside the cached span, which re-downloaded every symbol on every call.
+            cached_min, cached_max = PriceCache._cached_range(conn, symbol)
+            if cached_min:
+                start, end = cached_min, cached_max
+            else:
+                start, end = '1970-01-01', pd.Timestamp.utcnow().strftime('%Y-%m-%d')
+            df = PriceCache.get_prices(conn, symbol, start, end, price_column)
         finally:
             conn.close()
         if df.empty or len(df) < 60:
@@ -62,7 +69,7 @@ class RetirementProjector:
 
     @staticmethod
     def simulate(symbol, initial_amount, monthly_contribution, years, target_amount,
-                 method, num_simulations, drip):
+                 method, num_simulations, drip, seed=None):
         daily_returns = RetirementProjector._daily_returns(symbol, drip)
         if daily_returns is None:
             return None
@@ -71,7 +78,7 @@ class RetirementProjector:
         window_len = num_months * DAYS_PER_MONTH
 
         if method == 'monte_carlo':
-            rng = np.random.default_rng()
+            rng = np.random.default_rng(seed)  # seed=None keeps the old random behavior
             sampled = rng.choice(daily_returns, size=(num_simulations, num_months, DAYS_PER_MONTH))
             month_growth = np.prod(1 + sampled, axis=2)
         elif method == 'historical_rolling':
@@ -94,6 +101,8 @@ class RetirementProjector:
         summary['initial_amount'] = initial_amount
         summary['monthly_contribution'] = monthly_contribution
         summary['target_amount'] = target_amount
+        summary['seed'] = seed
+        summary['contributed'] = [round(initial_amount + monthly_contribution * m, 2) for m in summary['months']]
         return summary
 
 

@@ -1,4 +1,5 @@
 import os
+import sqlite3
 from datetime import datetime
 
 import pandas as pd
@@ -7,8 +8,9 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
+import dashboard_logic
 from advanced_analytics import PortfolioBuilder, RetirementProjector
-from calculator_logic import InvestmentCalculator
+from calculator_logic import DB_PATH, InvestmentCalculator
 
 load_dotenv()
 
@@ -178,6 +180,8 @@ def retirement_projector():
         num_simulations = int(data.get('num_simulations') or 1000)
         target_amount = data.get('target_amount')
         target_amount = float(target_amount) if target_amount not in (None, '') else None
+        seed = data.get('seed')
+        seed = int(seed) if seed not in (None, '') else None
     except (TypeError, ValueError):
         return jsonify({'error': 'symbol, initial_amount, and years are required.'}), 400
 
@@ -195,7 +199,7 @@ def retirement_projector():
     try:
         result = RetirementProjector.simulate(
             symbol, initial_amount, monthly_contribution, years, target_amount,
-            method, num_simulations, drip,
+            method, num_simulations, drip, seed,
         )
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -295,6 +299,52 @@ def this_week_in_history():
     return jsonify({'facts': facts})
 
 
+NEWS_QUERY = 'stocks finance'
+
+
+def store_headlines(articles, query):
+    """Keep every headline /api/news serves so it can be analyzed later. Re-serving the
+    same article is a no-op thanks to the UNIQUE url. Storage failures never break /api/news."""
+    rows = [
+        (
+            datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+            a.get('publishedAt'),
+            (a.get('source') or {}).get('name'),
+            a.get('title'),
+            a.get('description'),
+            a.get('url'),
+            query,
+        )
+        for a in articles if a.get('url') and a.get('title')
+    ]
+    if not rows:
+        return
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS news_headlines (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    fetched_at TEXT NOT NULL,
+                    published_at TEXT,
+                    source TEXT,
+                    title TEXT NOT NULL,
+                    description TEXT,
+                    url TEXT NOT NULL UNIQUE,
+                    query TEXT
+                )""")
+            conn.executemany(
+                'INSERT OR IGNORE INTO news_headlines '
+                '(fetched_at, published_at, source, title, description, url, query) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                rows,
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    except sqlite3.Error as e:
+        app.logger.warning('Could not store headlines: %s', e)
+
+
 @app.route('/api/news', methods=['GET'])
 def news():
     if not NEWSAPI_KEY:
@@ -303,13 +353,94 @@ def news():
     try:
         resp = requests.get(
             'https://newsapi.org/v2/everything',
-            params={'q': 'stocks finance', 'pageSize': 10, 'apiKey': NEWSAPI_KEY},
+            params={'q': NEWS_QUERY, 'pageSize': 10, 'apiKey': NEWSAPI_KEY},
             timeout=5,
         )
         resp.raise_for_status()
-        return jsonify({'articles': resp.json().get('articles', [])})
+        articles = resp.json().get('articles', [])
+        store_headlines(articles, NEWS_QUERY)
+        return jsonify({'articles': articles})
     except requests.RequestException:
         return jsonify({'articles': []}), 502
+
+
+# ---------------------------------------------------------------------------
+# Market Dashboard (dashboard.html). Read-only over data/stocks.db; see dashboard_logic.py.
+# ---------------------------------------------------------------------------
+
+def _date_arg(name):
+    value = (request.args.get(name) or '').strip()
+    if not value:
+        return None
+    datetime.strptime(value, '%Y-%m-%d')
+    return value
+
+
+def _float_arg(name, default, lo, hi):
+    raw = request.args.get(name)
+    value = float(raw) if raw not in (None, '') else default
+    if not (lo <= value <= hi):
+        raise ValueError(f'{name} must be between {lo:g} and {hi:g}.')
+    return value
+
+
+@app.route('/api/dashboard/meta', methods=['GET'])
+def dashboard_meta():
+    try:
+        return jsonify(dashboard_logic.meta())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/dashboard/performance', methods=['GET'])
+def dashboard_performance():
+    try:
+        symbols = [s.strip().upper() for s in (request.args.get('symbols') or '').split(',') if s.strip()]
+        symbols = list(dict.fromkeys(symbols))
+        if not (1 <= len(symbols) <= 7):
+            raise ValueError('Pick between 1 and 7 tickers.')
+        start, end = _date_arg('start'), _date_arg('end')
+        amount = _float_arg('amount', 10_000, 1, 1e9)
+        rf = _float_arg('rf', 2.0, 0, 20)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    try:
+        return jsonify(dashboard_logic.performance(symbols, start, end, amount, rf))
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/dashboard/allocation', methods=['GET'])
+def dashboard_allocation():
+    try:
+        equity = (request.args.get('equity') or 'SPY').strip().upper()
+        bond = (request.args.get('bond') or 'BND').strip().upper()
+        weight = _float_arg('weight', 60, 0, 100)
+        rebalance = request.args.get('rebalance') or 'quarterly'
+        start, end = _date_arg('start'), _date_arg('end')
+        amount = _float_arg('amount', 10_000, 1, 1e9)
+        rf = _float_arg('rf', 2.0, 0, 20)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    try:
+        return jsonify(dashboard_logic.allocation(equity, bond, weight, rebalance, start, end, amount, rf))
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/dashboard/rolling-windows', methods=['GET'])
+def dashboard_rolling_windows():
+    try:
+        horizon = int(request.args.get('horizon') or 10)
+        return jsonify(dashboard_logic.rolling_windows(horizon))
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':

@@ -1,0 +1,56 @@
+case,kpi,engine,dashboard,app,diff_bps
+SPY 2015-01-01 to 2025-12-31,Total Return %,/api/calculate,299.74,299.74,0.0
+SPY 2015-01-01 to 2025-12-31,Max Drawdown %,/api/calculate,-33.72,-33.72,0.0
+QQQ 2015-01-01 to 2025-12-31,Total Return %,/api/calculate,548.11,548.11,0.0
+QQQ 2015-01-01 to 2025-12-31,Max Drawdown %,/api/calculate,-35.12,-35.12,0.0
+BND 2008-01-01 to 2025-12-31,Total Return %,/api/calculate,66.65,66.65,0.0
+BND 2008-01-01 to 2025-12-31,Max Drawdown %,/api/calculate,-18.58,-18.58,0.0
+AAPL 2000-01-01 to 2025-12-31,Total Return %,/api/calculate,32292.02,32292.02,0.0
+AAPL 2000-01-01 to 2025-12-31,Max Drawdown %,/api/calculate,-81.8,-81.8,0.0
+MSFT 1990-01-01 to 2025-12-31,Total Return %,/api/calculate,128357.67,128357.67,0.0
+MSFT 1990-01-01 to 2025-12-31,Max Drawdown %,/api/calculate,-69.39,-69.39,0.0
+60/40 SPY/BND none 2008-01-01 to 2025-12-31,Total Return %,/api/portfolio,360.91,360.91,0.0
+60/40 SPY/BND none 2008-01-01 to 2025-12-31,CAGR %,/api/portfolio,8.86,8.86,0.0
+60/40 SPY/BND none 2008-01-01 to 2025-12-31,Volatility %,/api/portfolio,12.72,12.72,0.0
+60/40 SPY/BND none 2008-01-01 to 2025-12-31,Max Drawdown %,/api/portfolio,-29.84,-29.84,0.0
+60/40 SPY/BND none 2008-01-01 to 2025-12-31,Sharpe x100,/api/portfolio,54.0,54.0,0.0
+60/40 SPY/BND quarterly 2008-01-01 to 2025-12-31,Total Return %,/api/portfolio,309.93,309.93,0.0
+60/40 SPY/BND quarterly 2008-01-01 to 2025-12-31,CAGR %,/api/portfolio,8.16,8.16,0.0
+60/40 SPY/BND quarterly 2008-01-01 to 2025-12-31,Volatility %,/api/portfolio,11.82,11.82,0.0
+60/40 SPY/BND quarterly 2008-01-01 to 2025-12-31,Max Drawdown %,/api/portfolio,-33.4,-33.4,0.0
+60/40 SPY/BND quarterly 2008-01-01 to 2025-12-31,Sharpe x100,/api/portfolio,52.0,52.0,0.0
+60/40 SPY/BND annual 2008-01-01 to 2025-12-31,Total Return %,/api/portfolio,309.45,309.45,0.0
+60/40 SPY/BND annual 2008-01-01 to 2025-12-31,CAGR %,/api/portfolio,8.15,8.15,0.0
+60/40 SPY/BND annual 2008-01-01 to 2025-12-31,Volatility %,/api/portfolio,11.61,11.61,0.0
+60/40 SPY/BND annual 2008-01-01 to 2025-12-31,Max Drawdown %,/api/portfolio,-32.18,-32.18,0.0
+60/40 SPY/BND annual 2008-01-01 to 2025-12-31,Sharpe x100,/api/portfolio,53.0,53.0,0.0
+80/20 QQQ/BND none 2010-01-01 to 2025-12-31,Total Return %,/api/portfolio,1148.27,1148.27,0.0
+80/20 QQQ/BND none 2010-01-01 to 2025-12-31,CAGR %,/api/portfolio,17.1,17.1,0.0
+80/20 QQQ/BND none 2010-01-01 to 2025-12-31,Volatility %,/api/portfolio,18.87,18.87,0.0
+80/20 QQQ/BND none 2010-01-01 to 2025-12-31,Max Drawdown %,/api/portfolio,-34.41,-34.41,0.0
+80/20 QQQ/BND none 2010-01-01 to 2025-12-31,Sharpe x100,/api/portfolio,80.0,80.0,0.0
+80/20 QQQ/BND quarterly 2010-01-01 to 2025-12-31,Total Return %,/api/portfolio,908.99,908.99,0.0
+80/20 QQQ/BND quarterly 2010-01-01 to 2025-12-31,CAGR %,/api/portfolio,15.55,15.55,0.0
+80/20 QQQ/BND quarterly 2010-01-01 to 2025-12-31,Volatility %,/api/portfolio,16.5,16.5,0.0
+80/20 QQQ/BND quarterly 2010-01-01 to 2025-12-31,Max Drawdown %,/api/portfolio,-31.41,-31.41,0.0
+80/20 QQQ/BND quarterly 2010-01-01 to 2025-12-31,Sharpe x100,/api/portfolio,82.0,82.0,0.0
+80/20 QQQ/BND annual 2010-01-01 to 2025-12-31,Total Return %,/api/portfolio,914.21,914.21,0.0
+80/20 QQQ/BND annual 2010-01-01 to 2025-12-31,CAGR %,/api/portfolio,15.59,15.59,0.0
+80/20 QQQ/BND annual 2010-01-01 to 2025-12-31,Volatility %,/api/portfolio,16.54,16.54,0.0
+80/20 QQQ/BND annual 2010-01-01 to 2025-12-31,Max Drawdown %,/api/portfolio,-31.27,-31.27,0.0
+80/20 QQQ/BND annual 2010-01-01 to 2025-12-31,Sharpe x100,/api/portfolio,82.0,82.0,0.0
+50/50 AAPL/MSFT none 2000-01-01 to 2025-12-31,Total Return %,/api/portfolio,16775.22,16775.22,0.0
+50/50 AAPL/MSFT none 2000-01-01 to 2025-12-31,CAGR %,/api/portfolio,21.81,21.81,0.0
+50/50 AAPL/MSFT none 2000-01-01 to 2025-12-31,Volatility %,/api/portfolio,33.25,33.25,0.0
+50/50 AAPL/MSFT none 2000-01-01 to 2025-12-31,Max Drawdown %,/api/portfolio,-72.42,-72.42,0.0
+50/50 AAPL/MSFT none 2000-01-01 to 2025-12-31,Sharpe x100,/api/portfolio,60.0,60.0,0.0
+50/50 AAPL/MSFT quarterly 2000-01-01 to 2025-12-31,Total Return %,/api/portfolio,9661.46,9661.46,0.0
+50/50 AAPL/MSFT quarterly 2000-01-01 to 2025-12-31,CAGR %,/api/portfolio,19.27,19.27,0.0
+50/50 AAPL/MSFT quarterly 2000-01-01 to 2025-12-31,Volatility %,/api/portfolio,29.73,29.73,0.0
+50/50 AAPL/MSFT quarterly 2000-01-01 to 2025-12-31,Max Drawdown %,/api/portfolio,-71.21,-71.21,0.0
+50/50 AAPL/MSFT quarterly 2000-01-01 to 2025-12-31,Sharpe x100,/api/portfolio,57.99999999999999,57.99999999999999,0.0
+50/50 AAPL/MSFT annual 2000-01-01 to 2025-12-31,Total Return %,/api/portfolio,9923.3,9923.3,0.0
+50/50 AAPL/MSFT annual 2000-01-01 to 2025-12-31,CAGR %,/api/portfolio,19.39,19.39,0.0
+50/50 AAPL/MSFT annual 2000-01-01 to 2025-12-31,Volatility %,/api/portfolio,30.27,30.27,0.0
+50/50 AAPL/MSFT annual 2000-01-01 to 2025-12-31,Max Drawdown %,/api/portfolio,-72.42,-72.42,0.0
+50/50 AAPL/MSFT annual 2000-01-01 to 2025-12-31,Sharpe x100,/api/portfolio,56.99999999999999,56.99999999999999,0.0

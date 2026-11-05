@@ -1,10 +1,13 @@
-kpi,definition,source_table
-Total Return,"End adjusted close / start adjusted close - 1, over the selected months.",fact_monthly
-CAGR,(1 + Total Return) ^ (12 / months in window) - 1.,fact_monthly
-Annualized Volatility,"Sample std dev of monthly returns x sqrt(12). (The app uses daily returns x sqrt(252), so values differ slightly.)",fact_monthly
-Sharpe Ratio,(CAGR - risk-free rate) / Annualized Volatility. Risk-free rate is a what-if parameter (app default 2%).,fact_monthly
-Max Drawdown,"Lowest daily drawdown_from_peak in the selected dates, where the peak is the running all-time high since the ticker's first cached date.",fact_daily
-Real CAGR,"(1 + CAGR) / (1 + CPI CAGR) - 1, using CPI-U (FRED CPIAUCSL), latest reading on or before each month end.",fact_monthly
-Rolling 12M Volatility,Std dev of the trailing 12 monthly returns x sqrt(12).,fact_monthly
-Rolling N-Year CAGR,Price-only CAGR of the S&P 500 index for every monthly start date with N full years of data after it. Excludes dividends.,rolling_windows
-Monte Carlo percentiles,"Bootstrap of historical daily returns in 21-day months, same method as /api/retirement-projector, seed 42.",mc_projections
+kpi,definition,consistency
+Total Return,Last adjusted close / first adjusted close in the window - 1. Adjusted close assumes dividends are reinvested.,Same as /api/calculate with DRIP on.
+CAGR,"(End / Start) ^ (1 / years) - 1, where years = calendar days / 365.25.",Same as annualized return in /api/portfolio.
+Annualized Volatility,Sample standard deviation of daily returns x sqrt(252).,Same as /api/portfolio. Power BI: STDEV.S(fact_daily[daily_return]) * SQRT(252).
+Sharpe Ratio,(CAGR - risk-free rate) / Annualized Volatility. Risk-free rate is user-set (default 2%).,Same as /api/portfolio.
+Max Drawdown,"Largest fall from a running peak inside the selected window, measured on daily closes.",Same as /api/calculate. Power BI fact_daily[drawdown_from_peak] measures from the all-time high instead; the two agree when the window starts at a high.
+Recovery Date,First date after the max drawdown trough when value regained the prior peak. Blank if not yet recovered.,
+Real CAGR,"CAGR after restating the end value in start-date dollars with CPI-U (FRED CPIAUCSL), using the latest CPI reading on or before each date.",Same inflation rule as /api/calculate with inflation adjustment on.
+Annual Return,Year-end value / prior year-end value - 1. First and last years are partial when the window does not cover the full year.,
+Rolling 12M Volatility,"Volatility of the trailing 252 trading days, sampled at each month end.",
+Rebalanced Allocation,Two-asset portfolio reset to target weights on the first trading day of each quarter or year (or never). No taxes or fees.,Same path logic as /api/portfolio in a tax-advantaged account; checked in powerbi_export/reconciliation.csv.
+Rolling N-Year CAGR,S&P 500 price-index CAGR for every monthly start date with N full years after it. Price only: excludes dividends.,
+Monte Carlo Percentiles,"Bootstrap of historical daily returns in 21-day months, compounded with monthly contributions; p10 to p90 of simulated paths.",Uses /api/retirement-projector.

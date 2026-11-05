@@ -5,8 +5,8 @@
 const NAV_LINKS = [
     { href: 'index.html', label: 'Home', icon: 'fa-home' },
     { href: 'calculator.html', label: 'Calculator', icon: 'fa-calculator' },
-    { href: 'portfolio.html', label: 'Portfolio', icon: 'fa-folder' },
-    { href: 'market.html', label: 'Market Analysis', icon: 'fa-chart-bar' }
+    { href: 'dashboard.html', label: 'Dashboard', icon: 'fa-chart-pie' },
+    { href: 'portfolio.html', label: 'Portfolio', icon: 'fa-folder' }
 ];
 
 const FOOTER_LINKS = [

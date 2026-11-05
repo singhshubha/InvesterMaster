@@ -1,10 +1,10 @@
-check,rows_affected
-Header row imported as data in index tables,0
-"Text (non-numeric) change_percent in index tables, excl. header rows",0
-Zero or NULL volume rows in stocks,2
-Tickers whose last date trails the latest date in stocks,0
-Non-holiday gaps > 5 calendar days in stocks (excl. 2001-09-11 closure),0
-"Duplicate (symbol, date) in stocks",0
-Weekend dates in stocks,0
-Missing CPI months,1
-QQQ legacy table vs stocks: dates differing > $0.01,424
+check,rows_affected,status,note
+Header row imported as data in index tables,0,pass,
+"Text (non-numeric) change_percent in index tables, excl. header rows",0,pass,
+Zero or NULL volume rows in stocks,2,note,Reported as zero by Yahoo Finance; treated as missing in the views.
+Tickers whose last date trails the latest date in stocks,0,pass,
+Non-holiday gaps > 5 calendar days in stocks (excl. 2001-09-11 closure),0,pass,
+"Duplicate (symbol, date) in stocks",0,pass,
+Weekend dates in stocks,0,pass,
+Missing CPI months,1,note,October 2025 CPI was not published; the prior month is carried forward.
+QQQ legacy table vs stocks: dates differing > $0.01,424,note,Legacy qqq table is not split-adjusted. The dashboard uses stocks only.

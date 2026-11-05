@@ -17,8 +17,8 @@ const FEATURE_CARDS = [
     {
         action: 'market',
         icon: 'fa-magnifying-glass-chart',
-        title: 'Market Analysis',
-        description: 'Get insights into market trends and opportunities'
+        title: 'Market Dashboard',
+        description: 'Risk, return, inflation and what-if scenarios across stocks, ETFs and bonds'
     }
 ];
 
@@ -78,7 +78,7 @@ function openPortfolio() {
 }
 
 function openMarketAnalysis() {
-    window.location.href = 'market.html';
+    window.location.href = 'dashboard.html';
 }
 
 const CARD_ACTIONS = {
